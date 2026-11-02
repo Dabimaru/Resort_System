@@ -19,6 +19,20 @@ Azure Cove Resort is a luxury resort website and resort management system founda
 - Support chat widget for guest customers and admin replies
 - Supabase configuration and schema bootstrap support
 
+## Branching strategy
+This repository follows a simple Git workflow for large feature work:
+- `main` — stable production-ready branch
+- `develop` — active integration branch for the next set of changes
+- `feature/public-website` — customer-facing landing pages and branding
+- `feature/admin-portal` — admin dashboard and management screens
+- `feature/auth-customer-flow` — guest sign-up, sign-in, and session handling
+- `feature/booking-availability` — reservation, date blocking, and room availability logic
+- `feature/chat-support` — live support widget and admin support replies
+- `feature/supabase-live-data` — Supabase integration and schema work
+- `feature/test-automation` — automated coverage and QA validation
+
+Use `develop` for the main working branch and create a feature branch for each module before making changes. Merge back into `develop` when a feature is stable, and keep `main` reserved for release-ready state.
+
 ## Local admin access
 Development super-admin account:
 - Username: `admin`

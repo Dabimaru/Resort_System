@@ -55,8 +55,10 @@ function AppShell() {
 }
 
 export default function App() {
+  const basename = import.meta.env.PROD ? `/${(import.meta.env.VITE_BASE_PATH || 'Resort_System').replace(/^\/+|\/+$/g, '')}` : '/';
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <AppShell />
     </BrowserRouter>
   );

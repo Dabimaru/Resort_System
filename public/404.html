@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=./index.html" />
+    <title>Redirecting…</title>
+  </head>
+  <body>
+    <script>
+      const redirectTo = window.location.pathname.replace(/^\/Resort_System/, '') || '/';
+      window.location.replace(`./index.html${redirectTo === '/' ? '' : redirectTo}`);
+    </script>
+    <p>Redirecting to the app...</p>
+  </body>
+</html>
