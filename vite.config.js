@@ -2,9 +2,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const apiPort = Number(process.env.VITE_API_PORT || 5001);
-const repoName = (process.env.GITHUB_REPOSITORY || '').split('/')[1] || 'Resort_System';
 const isGithubPages = process.env.GITHUB_ACTIONS === 'true';
-const basePath = isGithubPages ? `/${repoName}/` : '/';
+const repoName = (process.env.GITHUB_REPOSITORY || '').split('/')[1];
+const basePath = process.env.VITE_BASE_PATH || (isGithubPages && repoName ? `/${repoName}/` : '/');
 
 export default defineConfig({
   base: basePath,

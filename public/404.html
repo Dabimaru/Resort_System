@@ -7,8 +7,11 @@
   </head>
   <body>
     <script>
-      const redirectTo = window.location.pathname.replace(/^\/Resort_System/, '') || '/';
-      window.location.replace(`./index.html${redirectTo === '/' ? '' : redirectTo}`);
+      const pathname = window.location.pathname;
+      const search = window.location.search;
+      const hash = window.location.hash;
+      const cleaned = pathname.replace(/^\/Resort_System/, '') || '/';
+      window.location.replace(`./index.html${cleaned === '/' ? '' : cleaned}${search}${hash}`);
     </script>
     <p>Redirecting to the app...</p>
   </body>

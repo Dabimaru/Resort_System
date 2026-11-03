@@ -1,12 +1,24 @@
+import { Link } from 'react-router-dom';
+
 export default function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-slate-950 py-8">
-      <div className="section-shell flex flex-col gap-4 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
-        <p>© 2026 Azure Cove Resort. All rights reserved.</p>
-        <div className="flex gap-5">
-          <a href="#" className="hover:text-white">Instagram</a>
-          <a href="#" className="hover:text-white">Facebook</a>
-          <a href="#" className="hover:text-white">Pinterest</a>
+    <footer className="border-t border-white/10 bg-slate-950 py-8 text-sm text-slate-400">
+      <div className="section-shell flex flex-col items-center justify-between gap-6 md:flex-row">
+        <div>
+          <p className="font-semibold text-white">Azure Cove Resort</p>
+          <p className="mt-1 text-xs text-slate-400">© 2026 Azure Cove Resort. All rights reserved.</p>
+        </div>
+
+        <nav className="flex flex-wrap items-center gap-6">
+          <Link to="/" className="transition hover:text-white">Home</Link>
+          <Link to="/auth" className="transition hover:text-white">Guest login</Link>
+          <Link to="/checkout" className="transition hover:text-white">Checkout</Link>
+          <Link to="/reports" className="transition hover:text-white">Reports</Link>
+          <Link to="/admin" className="transition hover:text-white">Admin portal</Link>
+        </nav>
+
+        <div className="flex items-center gap-5 text-xs text-slate-400">
+          <a href="#stay" className="transition hover:text-white">Back to top ↑</a>
         </div>
       </div>
     </footer>

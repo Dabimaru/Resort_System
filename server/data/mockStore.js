@@ -105,6 +105,20 @@ export const mockUsers = [
     createdAt: new Date().toISOString(),
     lastLoginAt: null,
   },
+  {
+    id: 'customer_demo_1',
+    name: 'Demo Guest',
+    username: 'guest',
+    email: 'guest@example.com',
+    passwordHash: hashPassword('guest123'),
+    role: 'customer',
+    roles: ['customer'],
+    permissions: ['customer.read'],
+    isStaff: false,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    lastLoginAt: null,
+  },
 ];
 
 export const mockStaffProfiles = [
