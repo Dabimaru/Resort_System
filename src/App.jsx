@@ -1,5 +1,6 @@
-import { BrowserRouter, Link, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import ChatWidget from './components/ChatWidget';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminLoginPage from './pages/AdminLoginPage';
@@ -33,21 +34,12 @@ function AppShell() {
         <Route path="/admin/reports" element={<AdminDashboardPage view="reports" />} />
         <Route path="/admin/settings" element={<AdminDashboardPage view="settings" />} />
         <Route path="/admin/profile" element={<AdminDashboardPage view="profile" />} />
+        <Route path="*" element={<HomePage />} />
       </Routes>
       {!isAdminRoute && (
         <>
           <ChatWidget />
-          <footer className="border-t border-white/10 bg-slate-950 py-4 text-center text-sm text-slate-400">
-            <div className="section-shell flex flex-col items-center justify-between gap-3 md:flex-row">
-              <p>Azure Cove Resort</p>
-              <div className="flex items-center gap-4">
-                <Link to="/" className="hover:text-white">Home</Link>
-                <Link to="/auth" className="hover:text-white">Login</Link>
-                <Link to="/checkout" className="hover:text-white">Checkout</Link>
-                <Link to="/reports" className="hover:text-white">Reports</Link>
-              </div>
-            </div>
-          </footer>
+          <Footer />
         </>
       )}
     </>
@@ -55,7 +47,8 @@ function AppShell() {
 }
 
 export default function App() {
-  const basename = import.meta.env.PROD ? `/${(import.meta.env.VITE_BASE_PATH || 'Resort_System').replace(/^\/+|\/+$/g, '')}` : '/';
+  const rawBase = import.meta.env.VITE_BASE_PATH || import.meta.env.BASE_URL || '/';
+  const basename = rawBase.replace(/\/+$/, '') || '/';
 
   return (
     <BrowserRouter basename={basename}>

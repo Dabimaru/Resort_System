@@ -61,7 +61,9 @@ app.use('/api/contact', contactRoutes);
 
 app.use(errorHandler);
 
-if (process.env.NODE_ENV !== 'test') {
+const shouldStartServer = process.env.NODE_ENV !== 'test' && !process.env.VERCEL;
+
+if (shouldStartServer) {
   const startServer = async () => {
     const port = await findAvailablePort(preferredPort);
     app.listen(port, () => {
