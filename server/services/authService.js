@@ -23,6 +23,12 @@ const getPasswordAliases = (user) => {
     aliases.add('FrontDesk123!');
   }
 
+  if (identifier === 'guest@example.com' || identifier === 'guest') {
+    aliases.add('guest');
+    aliases.add('guest123');
+    aliases.add('GuestPass123!');
+  }
+
   return [...aliases];
 };
 

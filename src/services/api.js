@@ -19,7 +19,10 @@ async function request(endpoint, options = {}, token) {
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(payload.message || 'Request failed.');
+    const errorMsg =
+      payload.message ||
+      (response.status ? `Request failed with status ${response.status} (${response.statusText || 'Error'}).` : 'Request failed.');
+    throw new Error(errorMsg);
   }
 
   return payload;
