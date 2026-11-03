@@ -78,7 +78,8 @@ export const createBooking = (req, res) => {
   }
 
   try {
-    const booking = buildBookingRecord({ arrival, departure, guests: guestCount, suite });
+    const userId = req.user?.id;
+    const booking = buildBookingRecord({ arrival, departure, guests: guestCount, suite, userId });
     return res.status(201).json({
       message: 'Booking request received successfully.',
       data: booking,
@@ -86,4 +87,17 @@ export const createBooking = (req, res) => {
   } catch (error) {
     return res.status(error.status || 500).json({ message: error.message || 'Unable to process booking.' });
   }
+};
+
+export const getUserBookings = (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: 'Authentication required.' });
+  }
+
+  const userBookings = mockBookings.filter((booking) => booking.userId === userId);
+  return res.status(200).json({
+    message: 'User bookings retrieved successfully.',
+    bookings: userBookings,
+  });
 };

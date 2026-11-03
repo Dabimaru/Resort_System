@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ChatWidget from './components/ChatWidget';
@@ -8,6 +8,13 @@ import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
 import HomePage from './pages/HomePage';
 import ReportsPage from './pages/ReportsPage';
+import MyBookingsPage from './pages/MyBookingsPage';
+import ProfilePage from './pages/ProfilePage';
+
+function RequireAuth({ children }) {
+  const token = localStorage.getItem('azureCoveToken');
+  return token ? children : <Navigate to="/auth" replace />;
+}
 
 function AppShell() {
   const location = useLocation();
@@ -19,7 +26,9 @@ function AppShell() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
+        <Route path="/my-bookings" element={<RequireAuth><MyBookingsPage /></RequireAuth>} />
+        <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />

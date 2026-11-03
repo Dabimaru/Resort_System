@@ -86,40 +86,40 @@ export default function ChatWidget() {
   return (
     <div className="fixed bottom-5 left-5 z-50 flex flex-col items-start">
       {isOpen && (
-        <div className="mb-3 w-[340px] overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/50">
-          <div className="flex items-center justify-between border-b border-white/10 bg-slate-800 px-4 py-3">
+        <div className="mb-3 w-[340px] overflow-hidden card-surface-elevated shadow-elevation-4">
+          <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
             <div>
-              <p className="text-sm font-semibold text-white">Support</p>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-emerald-300">Online</p>
+              <p className="text-body-sm font-semibold text-text-primary">Support</p>
+              <p className="text-caption text-state-success">Online</p>
             </div>
-            <button type="button" onClick={() => setIsOpen(false)} className="text-sm text-slate-300 hover:text-white">✕</button>
+            <button type="button" onClick={() => setIsOpen(false)} className="text-body-sm text-text-muted hover:text-text-primary">✕</button>
           </div>
 
-          <div className="max-h-[320px] space-y-3 overflow-y-auto bg-slate-950/70 p-4">
+          <div className="max-h-[320px] space-y-3 overflow-y-auto bg-surface/50 p-4">
             {messages.map((message) => (
               <div key={message.id} className={`flex ${message.sender === 'customer' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${message.sender === 'customer' ? 'bg-resort-500 text-slate-950' : 'bg-slate-800 text-slate-100'}`}>
-                  <p className="mb-1 text-[10px] uppercase tracking-[0.14em] text-current/70">{message.senderName}</p>
+                <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-body-sm ${message.sender === 'customer' ? 'bg-resort-500 text-text-inverse' : 'bg-surface-elevated text-text-primary'}`}>
+                  <p className="mb-1 text-caption text-current/70">{message.senderName}</p>
                   <p>{message.text}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <form onSubmit={handleSend} className="border-t border-white/10 bg-slate-900 p-3">
+          <form onSubmit={handleSend} className="border-t border-border bg-surface p-3">
             <div className="flex items-center gap-2">
               <input
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 rounded-full border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:border-resort-400 focus:outline-none"
+                className="form-input flex-1 rounded-full py-2 text-body-sm"
               />
               <button
                 type="submit"
                 disabled={loading || !draft.trim()}
-                className="rounded-full bg-resort-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+                className="btn-primary btn-icon"
               >
-                {loading ? '...' : 'Send'}
+                {loading ? <span className="spinner" /> : 'Send'}
               </button>
             </div>
           </form>
@@ -129,10 +129,10 @@ export default function ChatWidget() {
       <button
         type="button"
         onClick={handleOpen}
-        className="flex items-center gap-3 rounded-full bg-resort-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-resort-500/30 transition hover:scale-[1.02]"
+        className="btn-primary flex items-center gap-3 shadow-elevation-2 hover:scale-[1.02]"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950/10 text-base">💬</span>
-        <span>Chat support</span>
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface/20 text-base">💬</span>
+        <span className="hidden sm:inline">Chat support</span>
       </button>
     </div>
   );

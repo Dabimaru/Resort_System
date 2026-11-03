@@ -1,8 +1,14 @@
 import crypto from 'crypto';
 import { mockChatThreads } from '../data/mockStore.js';
 
+const getThreadForCustomer = (customerId) =>
+  mockChatThreads.find((thread) => thread.customerId === customerId) || null;
+
+const generateTicketNumber = () => `TKT-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
 const sanitizeThread = (thread) => ({
   id: thread.id,
+  ticketNumber: thread.ticketNumber,
   customerId: thread.customerId,
   customerName: thread.customerName,
   customerEmail: thread.customerEmail,
@@ -18,9 +24,6 @@ const sanitizeThread = (thread) => ({
   })),
 });
 
-const getThreadForCustomer = (customerId) =>
-  mockChatThreads.find((thread) => thread.customerId === customerId) || null;
-
 export const getCustomerChatThread = (req, res) => {
   const customer = req.user;
   const thread = getThreadForCustomer(customer.id);
@@ -30,6 +33,7 @@ export const getCustomerChatThread = (req, res) => {
       message: 'No active chat thread yet.',
       thread: {
         id: null,
+        ticketNumber: null,
         customerId: customer.id,
         customerName: customer.name,
         customerEmail: customer.email,
@@ -68,6 +72,7 @@ export const sendCustomerMessage = (req, res) => {
   if (!thread) {
     thread = {
       id: crypto.randomUUID(),
+      ticketNumber: generateTicketNumber(),
       customerId: customer.id,
       customerName: customer.name,
       customerEmail: customer.email,

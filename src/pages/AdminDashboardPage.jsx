@@ -786,7 +786,10 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
         ) : (
           inquiries.map((inquiry) => (
             <div key={inquiry.id} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-              <p className="font-medium text-white">{inquiry.name}</p>
+              <div className="flex items-center justify-between">
+                <p className="font-medium text-white">{inquiry.name}</p>
+                <span className="text-xs text-slate-400 font-mono">{inquiry.inquiryReference || inquiry.id}</span>
+              </div>
               <p className="text-sm text-slate-400">{inquiry.email}</p>
               <p className="mt-2 text-sm text-slate-200">{inquiry.message}</p>
             </div>
@@ -816,7 +819,10 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-medium text-white">{thread.customerName}</p>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-slate-300">{thread.status}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400 font-mono">{thread.ticketNumber || thread.id}</span>
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-slate-300">{thread.status}</span>
+                    </div>
                   </div>
                   <p className="mt-2 text-xs text-slate-400">{thread.customerEmail}</p>
                   <p className="mt-2 line-clamp-2 text-sm text-slate-200">{thread.messages?.[thread.messages.length - 1]?.text || 'No messages yet.'}</p>

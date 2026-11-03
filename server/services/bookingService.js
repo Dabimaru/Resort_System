@@ -55,7 +55,7 @@ export const getAvailableRooms = ({ arrival, departure, guests, type } = {}) => 
   });
 };
 
-export const buildBookingRecord = ({ arrival, departure, guests, suite }) => {
+export const buildBookingRecord = ({ arrival, departure, guests, suite, userId }) => {
   const room = mockRooms.find((entry) => entry.name === suite);
   if (!room) {
     const error = new Error('Selected room is not available in the resort catalog.');
@@ -103,6 +103,7 @@ export const buildBookingRecord = ({ arrival, departure, guests, suite }) => {
     status: 'pending',
     bookingReference: `AZ-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
     createdAt: new Date().toISOString(),
+    userId,
   };
 
   mockBookings.push(record);

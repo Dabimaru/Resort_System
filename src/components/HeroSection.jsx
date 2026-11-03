@@ -10,7 +10,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section id="stay" className="relative isolate overflow-hidden bg-slate-950">
+    <section id="stay" className="relative isolate overflow-hidden bg-surface">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{
@@ -22,13 +22,11 @@ export default function HeroSection() {
 
       <div className="section-shell relative grid min-h-[720px] items-center gap-10 py-20 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="max-w-2xl">
-          <span className="inline-flex rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium uppercase tracking-[0.22em] text-resort-200">
-            Coastal luxury stays
-          </span>
-          <h1 className="mt-6 text-5xl font-semibold tracking-tight text-white md:text-6xl">
+          <span className="badge badge-info">Coastal luxury stays</span>
+          <h1 className="mt-6 text-display-sm font-semibold tracking-tight text-text-primary md:text-display-md">
             Escape to your own private horizon.
           </h1>
-          <p className="mt-6 max-w-xl text-lg text-slate-200 md:text-xl">
+          <p className="mt-6 max-w-xl text-body-lg text-text-secondary md:text-body-lg">
             {resortData.tagline}
           </p>
 
@@ -36,13 +34,13 @@ export default function HeroSection() {
             <a
               href="#booking"
               onClick={scrollToBooking}
-              className="rounded-full bg-resort-500 px-7 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-resort-400"
+              className="btn-primary"
             >
               Reserve a stay
             </a>
             <a
               href="#experiences"
-              className="rounded-full border border-white/20 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/10"
+              className="btn-outline"
             >
               View experiences
             </a>
@@ -50,21 +48,19 @@ export default function HeroSection() {
 
           <div className="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-4">
             {resortData.stats.map((stat) => (
-              <div key={stat.label} className="rounded-2xl border border-white/10 bg-slate-950/30 p-4 backdrop-blur-sm">
-                <div className="text-2xl font-semibold text-white">{stat.value}</div>
-                <div className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-300">{stat.label}</div>
+              <div key={stat.label} className="card-surface p-4 backdrop-blur-sm">
+                <div className="text-heading-lg font-semibold text-text-primary">{stat.value}</div>
+                <div className="mt-2 text-caption text-text-muted">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-white/15 bg-white/10 p-6 shadow-glow backdrop-blur-xl">
-          <div className="rounded-[1.5rem] bg-slate-950/60 p-5">
+        <div className="card-surface-elevated p-6 shadow-glow rounded-3xl backdrop-blur-xl">
+          <div className="card-surface p-5 rounded-2xl">
             <div className="flex items-center justify-between">
-              <p className="text-sm uppercase tracking-[0.22em] text-slate-300">Featured stay</p>
-              <span className="rounded-full bg-emerald-500/20 px-2 py-1 text-xs font-medium text-emerald-300">
-                Available now
-              </span>
+              <p className="text-caption text-text-muted">Featured stay</p>
+              <span className="badge badge-success">Available now</span>
             </div>
 
             <img
@@ -75,24 +71,24 @@ export default function HeroSection() {
 
             <div className="mt-6 flex items-end justify-between">
               <div>
-                <div className="text-sm uppercase tracking-[0.18em] text-slate-400">Laguna Suite</div>
-                <div className="mt-2 text-3xl font-semibold text-white">$420<span className="text-base text-slate-400"> / night</span></div>
+                <div className="text-caption text-text-muted">Laguna Suite</div>
+                <div className="mt-2 text-heading-xl font-semibold text-text-primary">$420<span className="text-body text-text-muted"> / night</span></div>
               </div>
               <a
                 href="#booking"
                 onClick={scrollToBooking}
-                className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100"
+                className="btn-secondary"
               >
                 Book
               </a>
             </div>
 
-            <div className="mt-6 space-y-3 text-sm text-slate-200">
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+            <div className="mt-6 space-y-3 text-body-sm text-text-secondary">
+              <div className="flex items-center justify-between border-b border-border pb-2">
                 <span>Check in</span>
                 <span>Fri, 20 Dec</span>
               </div>
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+              <div className="flex items-center justify-between border-b border-border pb-2">
                 <span>Check out</span>
                 <span>Sun, 22 Dec</span>
               </div>

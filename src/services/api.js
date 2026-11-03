@@ -40,6 +40,13 @@ export function submitBooking(payload) {
   });
 }
 
+export function createBooking(payload) {
+  return request('/bookings', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export function submitInquiry(payload) {
   return request('/contact', {
     method: 'POST',
@@ -221,4 +228,12 @@ export function verifyPayment(payload) {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export function getUserBookings(token) {
+  return request('/bookings/my', {}, token);
+}
+
+export function getUserProfile(token) {
+  return request('/auth/me', {}, token);
 }

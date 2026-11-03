@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { resortData } from '../data/resortData';
 
 const navItems = [
@@ -10,15 +11,40 @@ const navItems = [
 ];
 
 export default function Header() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem('azureCoveToken');
+      setIsLoggedIn(!!token);
+    };
+    checkAuth();
+    window.addEventListener('storage', checkAuth);
+    window.addEventListener('focus', checkAuth);
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('focus', checkAuth);
+    };
+  }, [location.pathname]);
+
+  const handleSignOut = () => {
+    localStorage.removeItem('azureCoveToken');
+    setIsLoggedIn(false);
+    if (location.pathname === '/checkout' || location.pathname.startsWith('/auth')) {
+      window.location.href = '/';
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-border bg-surface/80 backdrop-blur-xl">
       <div className="section-shell flex items-center justify-between py-4">
         <Link to="/" className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-resort-500/20 text-lg font-semibold text-resort-200">
             A
           </div>
           <div>
-            <p className="text-lg font-semibold text-white">{resortData.company}</p>
+            <p className="text-lg font-semibold text-text-primary">{resortData.company}</p>
           </div>
         </Link>
 
@@ -27,7 +53,7 @@ export default function Header() {
             <a
               key={item.label}
               href={`/#${item.target}`}
-              className="text-sm text-slate-200 transition hover:text-white"
+              className="text-body-sm text-text-secondary transition hover:text-text-primary"
             >
               {item.label}
             </a>
@@ -35,18 +61,49 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link
-            to="/checkout"
-            className="rounded-full border border-white/15 px-4 py-2 text-sm text-slate-200 transition hover:border-white/35 hover:text-white"
-          >
-            Checkout
-          </Link>
-          <Link
-            to="/auth"
-            className="rounded-full border border-white/15 px-4 py-2 text-sm text-slate-200 transition hover:border-white/35 hover:text-white"
-          >
-            Guest login
-          </Link>
+          {isLoggedIn ? (
+            <>
+              <Link
+                to="/my-bookings"
+                className="btn-ghost btn-sm"
+              >
+                My Bookings
+              </Link>
+              <Link
+                to="/checkout"
+                className="btn-outline btn-sm"
+              >
+                Checkout
+              </Link>
+              <Link
+                to="/profile"
+                className="btn-outline btn-sm"
+              >
+                Profile
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="btn-danger btn-sm"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/checkout"
+                className="btn-ghost btn-sm hidden"
+              >
+                Checkout
+              </Link>
+              <Link
+                to="/auth"
+                className="btn-primary btn-sm"
+              >
+                Guest login
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
