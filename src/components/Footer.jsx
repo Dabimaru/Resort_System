@@ -65,7 +65,7 @@ export default function Footer() {
     <footer className="border-t border-border bg-surface dark:border-dark-border dark:bg-dark-surface">
       <div className="section-shell py-12 lg:py-16">
         {/* Main Content Grid */}
-        <div className="grid gap-8 md:grid-cols-5 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.5fr_1fr_1fr] lg:gap-8">
           {/* Left Section: Support */}
           <div className="space-y-4">
             <h3 className="text-heading-sm font-semibold text-text-primary dark:text-dark-text-primary">Support</h3>
