@@ -19,6 +19,13 @@ const isConfigured = Boolean(supabaseUrl && anonKey && !supabaseUrl.includes('pl
 const isTestEnvironment = process.env.NODE_ENV === 'test';
 const liveModeEnabled = isConfigured && !isTestEnvironment;
 
+export const supabase = createClient(supabaseUrl, anonKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  },
+});
+
 export const supabaseAdmin = serviceRoleKey
   ? createClient(supabaseUrl, serviceRoleKey, {
       auth: {
@@ -31,13 +38,6 @@ export const supabaseAdmin = serviceRoleKey
 if (!isConfigured) {
   console.warn('Supabase environment variables are not configured. Falling back to local mock data.');
 }
-
-export const supabase = createClient(supabaseUrl, anonKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
 
 export const supabaseStatus = {
   configured: isConfigured,
