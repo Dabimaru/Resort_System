@@ -132,6 +132,28 @@ select {
 
 .dark .text-link { @apply hover:text-resort-400; }
 
+/* Dark mode typography overrides */
+.dark .text-display-xl,
+.dark .text-display-lg,
+.dark .text-display-md,
+.dark .text-display-sm,
+.dark .text-heading-xl,
+.dark .text-heading-lg,
+.dark .text-heading-md,
+.dark .text-heading-sm,
+.dark .text-body-lg,
+.dark .text-body-md {
+  @apply text-dark-text-primary;
+}
+
+.dark .text-body-sm {
+  @apply text-dark-text-secondary;
+}
+
+.dark .text-caption {
+  @apply text-dark-text-muted;
+}
+
 /* Buttons */
 .btn {
   @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all duration-fast ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-50;

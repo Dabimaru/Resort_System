@@ -9,18 +9,18 @@ export default function Footer() {
   const supportItems = [
     { label: 'My Bookings', to: '/my-bookings' },
     { label: 'Checkout', to: '/checkout' },
-    { label: phone, href: `tel:${phone.replace(/\D/g, '')}` },
-    { label: email, href: `mailto:${email}` },
-    { label: 'Chat Support', to: '#chat' },
-    { label: 'Inquiries', to: '/contact' },
+    { label: phone, href: `tel:${phone.replace(/\D/g, '')}`, icon: 'phone' },
+    { label: email, href: `mailto:${email}`, icon: 'mail' },
+    { label: 'Chat Support', to: '#chat', action: 'chat' },
+    { label: 'Inquiries', to: '/#contact', target: 'contact' },
   ];
 
   const exploreItems = [
-    { label: 'Stay', to: '#stay' },
-    { label: 'Suites', to: '#suites' },
-    { label: 'Experience', to: '#experiences' },
-    { label: 'Gallery', to: '#gallery' },
-    { label: 'Reviews', to: '#reviews' },
+    { label: 'Stay', to: '/#stay', target: 'stay' },
+    { label: 'Suites', to: '/#suites', target: 'suites' },
+    { label: 'Experience', to: '/#experiences', target: 'experiences' },
+    { label: 'Gallery', to: '/#gallery', target: 'gallery' },
+    { label: 'Reviews', to: '/#reviews', target: 'reviews' },
   ];
 
   const socialItems = [
@@ -41,6 +41,26 @@ export default function Footer() {
     { label: 'Privacy Notice', to: '/privacy' },
   ];
 
+  const handleExploreClick = (event, target) => {
+    if (!target) {
+      return;
+    }
+
+    const section = document.getElementById(target);
+    if (section) {
+      event.preventDefault();
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleChatSupport = (event) => {
+    const launcher = document.getElementById('azure-cove-chat-launcher');
+    if (launcher) {
+      event.preventDefault();
+      launcher.click();
+    }
+  };
+
   return (
     <footer className="border-t border-border bg-surface dark:border-dark-border dark:bg-dark-surface">
       <div className="section-shell py-12 lg:py-16">
@@ -54,14 +74,25 @@ export default function Footer() {
                 <a
                   key={item.label}
                   href={item.href || item.to}
+                  onClick={(event) => {
+                    if (item.action === 'chat') {
+                      handleChatSupport(event);
+                      return;
+                    }
+                    handleExploreClick(event, item.target);
+                  }}
                   className="flex items-center gap-2 text-body-sm text-text-secondary transition hover:text-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
                 >
-                  {item.href ? (
-                    <svg className="h-4 w-4 text-text-muted dark:text-dark-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                  {item.icon === 'phone' ? (
+                    <svg className="h-4 w-4 shrink-0 text-text-muted dark:text-dark-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  ) : item.icon === 'mail' ? (
+                    <svg className="h-4 w-4 shrink-0 text-text-muted dark:text-dark-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   ) : null}
-                  {item.label}
+                  <span className="truncate">{item.label}</span>
                 </a>
               ))}
             </nav>
@@ -75,7 +106,8 @@ export default function Footer() {
                 <Link
                   key={item.label}
                   to={item.to}
-                  className="text-body-sm text-text-secondary transition hover:text-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
+                  onClick={(event) => handleExploreClick(event, item.target)}
+                  className="block text-body-sm text-text-secondary transition hover:text-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
                 >
                   {item.label}
                 </Link>
@@ -111,17 +143,18 @@ export default function Footer() {
           {/* Center-Right Section: Social */}
           <div className="space-y-4">
             <h3 className="text-heading-sm font-semibold text-text-primary dark:text-dark-text-primary">Social</h3>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col gap-3">
               {socialItems.map((item) => (
                 <a
                   key={item.label}
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-surface-elevated text-text-secondary transition hover:border-resort-500 hover:text-resort-600 hover:bg-resort-500/10 dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-secondary dark:hover:border-resort-400 dark:hover:text-resort-400 dark:hover:bg-resort-500/20"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border bg-surface-elevated transition hover:border-resort-500 hover:text-resort-600 hover:bg-resort-500/10 dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-secondary dark:hover:border-resort-400 dark:hover:text-resort-400 dark:hover:bg-resort-500/20"
                   aria-label={item.label}
                 >
                   {item.icon}
+                  <span className="text-body-sm text-text-secondary dark:text-dark-text-secondary">{item.label}</span>
                 </a>
               ))}
             </div>
@@ -135,7 +168,7 @@ export default function Footer() {
                 <Link
                   key={item.label}
                   to={item.to}
-                  className="text-body-sm text-text-secondary transition hover:text-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
+                  className="block text-body-sm text-text-secondary transition hover:text-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
                 >
                   {item.label}
                 </Link>

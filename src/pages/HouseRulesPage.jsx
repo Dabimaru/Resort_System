@@ -1,119 +1,146 @@
-import { Link } from 'react-router-dom';
+import PolicyLayout from '../components/PolicyLayout';
+
+const sections = [
+  {
+    id: 'checkin',
+    title: 'Check-in & Check-out',
+    paragraphs: [
+      'A smooth arrival and departure helps every guest enjoy their stay. Please plan around the following times.',
+    ],
+    bullets: [
+      'Check-in: 2:00 PM onwards',
+      'Check-out: 12:00 PM (noon)',
+      'Early check-in and late check-out are subject to availability and additional charges',
+      'Late check-out beyond 6:00 PM is charged as a full night',
+    ],
+  },
+  {
+    id: 'quiet',
+    title: 'Quiet Hours',
+    paragraphs: [
+      'To protect the calm of the cove, quiet hours are observed across the property each night.',
+    ],
+    bullets: [
+      'Quiet hours run from 10:00 PM to 7:00 AM daily',
+      'Please keep televisions, music, and conversation at a considerate volume',
+      'The pool deck closes at 10:00 PM',
+      'Repeated disturbances may result in a request to vacate the premises',
+    ],
+  },
+  {
+    id: 'smoking',
+    title: 'Smoking Policy',
+    paragraphs: [
+      'All indoor areas of the resort are strictly non-smoking, including rooms, balconies, and enclosed dining spaces.',
+    ],
+    bullets: [
+      'Designated outdoor smoking areas are available and marked on the property map',
+      'A cleaning fee of PHP 5,000 applies for smoking in non-designated areas',
+      'Electronic cigarettes and vapes follow the same policy as conventional smoking',
+    ],
+  },
+  {
+    id: 'pets',
+    title: 'Pets',
+    paragraphs: [
+      'We welcome well-behaved pets in our designated pet-friendly rooms with advance notice.',
+    ],
+    bullets: [
+      'Advance notice is required at the time of booking',
+      'Pet fee: PHP 1,500 per night, per pet',
+      'Maximum of 2 pets per room, each under 25 kg',
+      'Pets must be leashed in all public areas and are not permitted in dining venues or the pool',
+    ],
+  },
+  {
+    id: 'pool',
+    title: 'Pool & Spa',
+    paragraphs: [
+      'Our infinity pool and spa are open to registered guests throughout the day.',
+    ],
+    bullets: [
+      'Pool hours: 6:00 AM to 10:00 PM',
+      'Children under 12 must be accompanied by an adult at all times',
+      'No diving, running, or glass containers in the pool area',
+      'Spa treatments require advance reservation',
+      'Pool and beach towels are issued against a towel card from your room',
+    ],
+  },
+  {
+    id: 'dining',
+    title: 'Dining & Room Service',
+    paragraphs: [
+      'Our restaurants and in-room dining serve locally sourced coastal cuisine throughout the day.',
+    ],
+    bullets: [
+      'Breakfast: 6:30 AM to 10:30 AM',
+      'Room service: 6:00 AM to 11:00 PM',
+      'Outside food and beverages are not permitted in dining venues',
+      'Dress code for dinner venues is smart casual',
+    ],
+  },
+  {
+    id: 'property',
+    title: 'Property & Amenities',
+    paragraphs: [
+      'Please help us keep the resort in excellent condition for every guest who follows.',
+    ],
+    bullets: [
+      'Resort property and linens should remain in your room',
+      'Water sports equipment is available from the beach desk',
+      'The fitness centre is accessible 24/7 with your room key card',
+      'Damages beyond normal wear may be charged to your room account',
+    ],
+  },
+  {
+    id: 'safety',
+    title: 'Safety & Security',
+    paragraphs: [
+      'Your safety is our priority. Please take a moment to note the following.',
+    ],
+    bullets: [
+      'Use the in-room safe for passports, jewellery, and valuables',
+      'Do not leave balcony doors open when the room is unattended',
+      'Report any safety concern to the front desk immediately',
+      'Emergency exits are marked on every floor and in every room',
+    ],
+  },
+  {
+    id: 'children',
+    title: 'Children & Families',
+    paragraphs: [
+      'Families are warmly welcome, and we offer services designed around younger guests.',
+    ],
+    bullets: [
+      'Children under 12 stay free when using existing bedding',
+      'Babysitting services are available with 24 hours notice',
+      'Kids club runs 9:00 AM to 5:00 PM for ages 4 to 12',
+      'High chairs and cribs are available on request at no extra charge',
+    ],
+  },
+  {
+    id: 'general',
+    title: 'General',
+    paragraphs: [
+      'A few final points that apply across the property.',
+    ],
+    bullets: [
+      'Maximum occupancy per room must not be exceeded',
+      'Parties and events require prior approval from management',
+      'Drone usage is prohibited on resort property',
+      'Management reserves the right to amend these rules as needed',
+    ],
+  },
+];
 
 export default function HouseRulesPage() {
   return (
-    <div className="min-h-screen bg-surface text-text-primary">
-      <div className="section-shell py-16">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <div className="text-center">
-            <h1 className="text-heading-xl font-semibold text-text-primary">House Rules</h1>
-            <p className="mt-2 text-body-lg text-text-secondary">Guidelines for a pleasant stay</p>
-          </div>
-
-          <div className="card-surface-elevated p-8 space-y-6">
-            <section>
-              <h2 className="text-heading-md text-text-primary">Check-in & Check-out</h2>
-              <ul className="mt-3 space-y-2 text-body-md text-text-secondary list-disc list-inside">
-                <li>Check-in: 2:00 PM onwards</li>
-                <li>Check-out: 12:00 PM (noon)</li>
-                <li>Early check-in / late check-out subject to availability and additional charges</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-heading-md text-text-primary">Quiet Hours</h2>
-              <ul className="mt-3 space-y-2 text-body-md text-text-secondary list-disc list-inside">
-                <li>Quiet hours observed from 10:00 PM to 7:00 AM daily</li>
-                <li>Please keep noise levels to a minimum during these hours</li>
-                <li>Pool area closes at 10:00 PM</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-heading-md text-text-primary">Smoking Policy</h2>
-              <ul className="mt-3 space-y-2 text-body-md text-text-secondary list-disc list-inside">
-                <li>All indoor areas are strictly non-smoking</li>
-                <li>Designated outdoor smoking areas are available</li>
-                <li>A cleaning fee of PHP 5,000 applies for smoking in non-designated areas</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-heading-md text-text-primary">Pets</h2>
-              <ul className="mt-3 space-y-2 text-body-md text-text-secondary list-disc list-inside">
-                <li>Pets are welcome in designated pet-friendly rooms only</li>
-                <li>Advance notice required at time of booking</li>
-                <li>Pet fee: PHP 1,500 per night per pet</li>
-                <li>Maximum 2 pets per room, each under 25kg</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-heading-md text-text-primary">Pool & Spa Rules</h2>
-              <ul className="mt-3 space-y-2 text-body-md text-text-secondary list-disc list-inside">
-                <li>Pool hours: 6:00 AM – 10:00 PM</li>
-                <li>Children under 12 must be accompanied by an adult</li>
-                <li>No diving, running, or glass containers in pool area</li>
-                <li>Spa treatments require advance reservation</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-heading-md text-text-primary">Dining & Room Service</h2>
-              <ul className="mt-3 space-y-2 text-body-md text-text-secondary list-disc list-inside">
-                <li>Breakfast: 6:30 AM – 10:30 AM</li>
-                <li>Room service available 6:00 AM – 11:00 PM</li>
-                <li>Outside food and beverages not permitted in dining venues</li>
-                <li>Dress code: Smart casual for dinner venues</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-heading-md text-text-primary">Property & Amenities</h2>
-              <ul className="mt-3 space-y-2 text-body-md text-text-secondary list-disc list-inside">
-                <li>Please do not remove resort property from rooms</li>
-                <li>Towel cards required for pool/beach towel service</li>
-                <li>Water sports equipment available at the beach desk</li>
-                <li>Gym access: 24/7 with room key card</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-heading-md text-text-primary">Safety & Security</h2>
-              <ul className="mt-3 space-y-2 text-body-md text-text-secondary list-disc list-inside">
-                <li>Use in-room safe for valuables</li>
-                <li>Do not leave balcony doors open when unattended</li>
-                <li>Report any safety concerns to front desk immediately</li>
-                <li>Emergency exits marked on each floor</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-heading-md text-text-primary">Children & Families</h2>
-              <ul className="mt-3 space-y-2 text-body-md text-text-secondary list-disc list-inside">
-                <li>Children under 12 stay free with existing bedding</li>
-                <li>Babysitting services available with 24-hour notice</li>
-                <li>Kids club: 9:00 AM – 5:00 PM (ages 4-12)</li>
-                <li>High chairs and cribs available upon request</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-heading-md text-text-primary">General</h2>
-              <ul className="mt-3 space-y-2 text-body-md text-text-secondary list-disc list-inside">
-                <li>Maximum occupancy per room must not be exceeded</li>
-                <li>Parties and events require prior management approval</li>
-                <li>Drone usage prohibited on resort property</li>
-                <li>Management reserves the right to amend rules as needed</li>
-              </ul>
-            </section>
-          </div>
-
-          <div className="text-center">
-            <Link to="/" className="btn-primary">Back to Home</Link>
-          </div>
-        </div>
-      </div>
-    </div>
+    <PolicyLayout
+      badge="Guest guide"
+      title="House Rules"
+      subtitle="A short guide to the times, courtesies, and guidelines that keep Azure Cove comfortable for everyone."
+      lastUpdated="November 2026"
+      sections={sections}
+    />
   );
 }

@@ -127,6 +127,7 @@ export default function ChatWidget() {
       )}
 
       <button
+        id="azure-cove-chat-launcher"
         type="button"
         onClick={handleOpen}
         className="btn-primary flex items-center gap-3 shadow-elevation-2 hover:scale-[1.02]"

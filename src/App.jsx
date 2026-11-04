@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -19,8 +19,6 @@ function RequireAuth({ children }) {
   const token = localStorage.getItem('azureCoveToken');
   return token ? children : <Navigate to="/auth" replace />;
 }
-
-import { Navigate } from 'react-router-dom';
 
 function AppShell() {
   const location = useLocation();
