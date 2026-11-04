@@ -1,7 +1,7 @@
 export const resortData = {
   company: 'Azure Cove Resort',
   tagline: 'A coastal sanctuary crafted for slow mornings and unforgettable evenings.',
-  navItems: ['Stay', 'Suites', 'Experiences', 'Dining', 'Wellness'],
+  navItems: ['Stay', 'Suites', 'Experiences', 'Gallery', 'Reviews'],
   stats: [
     { value: '28', label: 'Oceanfront suites' },
     { value: '4.9/5', label: 'Guest rating' },

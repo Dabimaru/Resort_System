@@ -21,14 +21,14 @@ export default function AdminSidebar({ user, permissions }) {
   });
 
   return (
-    <aside className="w-full max-w-xs rounded-3xl border border-white/10 bg-slate-900/80 p-4 text-slate-200 md:w-72">
-      <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-resort-500/20 text-lg font-semibold text-resort-200">
+    <aside className="w-full max-w-xs rounded-3xl border border-border bg-surface-elevated p-4 text-text-secondary dark:border-dark-border dark:bg-dark-surface-elevated md:w-72">
+      <div className="mb-6 flex items-center gap-3 border-b border-border pb-4 dark:border-dark-border">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-resort-500/10 text-lg font-semibold text-resort-600 dark:bg-resort-500/20 dark:text-resort-400">
           AC
         </div>
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Resort</p>
-          <h2 className="text-lg font-semibold text-white">Admin Suite</h2>
+          <p className="text-xs uppercase tracking-[0.2em] text-text-muted dark:text-dark-text-muted">Resort</p>
+          <h2 className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">Admin Suite</h2>
         </div>
       </div>
 
@@ -39,7 +39,9 @@ export default function AdminSidebar({ user, permissions }) {
             to={item.to}
             className={({ isActive }) =>
               `flex items-center justify-between rounded-2xl px-3 py-2.5 text-sm transition ${
-                isActive ? 'bg-resort-500 text-slate-950 font-semibold' : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                isActive
+                  ? 'bg-resort-500/10 text-resort-600 font-semibold dark:bg-resort-500/20 dark:text-resort-400'
+                  : 'text-text-secondary hover:bg-surface hover:text-text-primary dark:text-dark-text-secondary dark:hover:bg-dark-surface dark:hover:text-dark-text-primary'
               }`
             }
           >
@@ -48,10 +50,10 @@ export default function AdminSidebar({ user, permissions }) {
         ))}
       </nav>
 
-      <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/60 p-3">
-        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Signed in</p>
-        <p className="mt-2 font-medium text-white">{user?.name || 'Administrator'}</p>
-        <p className="text-sm text-slate-400">{user?.role || 'admin'}</p>
+      <div className="mt-6 rounded-2xl border border-border bg-surface-elevated/50 p-3 dark:border-dark-border dark:bg-dark-surface-elevated/50">
+        <p className="text-xs uppercase tracking-[0.2em] text-text-muted dark:text-dark-text-muted">Signed in</p>
+        <p className="mt-2 font-medium text-text-primary dark:text-dark-text-primary">{user?.name || 'Administrator'}</p>
+        <p className="text-sm text-text-muted dark:text-dark-text-muted">{user?.role || 'admin'}</p>
       </div>
     </aside>
   );

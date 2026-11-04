@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ChatWidget from './components/ChatWidget';
@@ -8,6 +9,18 @@ import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
 import HomePage from './pages/HomePage';
 import ReportsPage from './pages/ReportsPage';
+import MyBookingsPage from './pages/MyBookingsPage';
+import ProfilePage from './pages/ProfilePage';
+import TermsPage from './pages/TermsPage';
+import HouseRulesPage from './pages/HouseRulesPage';
+import PrivacyPage from './pages/PrivacyPage';
+
+function RequireAuth({ children }) {
+  const token = localStorage.getItem('azureCoveToken');
+  return token ? children : <Navigate to="/auth" replace />;
+}
+
+import { Navigate } from 'react-router-dom';
 
 function AppShell() {
   const location = useLocation();
@@ -19,7 +32,12 @@ function AppShell() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
+        <Route path="/my-bookings" element={<RequireAuth><MyBookingsPage /></RequireAuth>} />
+        <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/house-rules" element={<HouseRulesPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -51,8 +69,10 @@ export default function App() {
   const basename = rawBase.replace(/\/+$/, '') || '/';
 
   return (
-    <BrowserRouter basename={basename}>
-      <AppShell />
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter basename={basename}>
+        <AppShell />
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

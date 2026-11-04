@@ -29,28 +29,26 @@ export default function ReportsPage() {
   }, []);
 
   if (loading) {
-    return <div className="min-h-screen bg-slate-950 px-4 py-20 text-center text-white">Loading reports...</div>;
+    return <div className="min-h-screen bg-surface px-4 py-20 text-center text-text-primary dark:bg-dark-surface dark:text-dark-text-primary">Loading reports...</div>;
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-950 px-4 py-20 text-white">
-        <div className="section-shell rounded-3xl border border-red-500/30 bg-red-500/10 p-8">
-          <h1 className="text-3xl font-semibold">Reports unavailable</h1>
-          <p className="mt-3 text-red-100">{error}</p>
+      <div className="min-h-screen bg-surface px-4 py-20 text-text-primary dark:bg-dark-surface dark:text-dark-text-primary">
+        <div className="section-shell card-surface-elevated p-8 border-l-4 border-state-error">
+          <h1 className="text-heading-xl">Reports unavailable</h1>
+          <p className="mt-3 text-state-error">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-12 text-white">
+    <div className="min-h-screen bg-surface px-4 py-12 text-text-primary dark:bg-dark-surface dark:text-dark-text-primary">
       <div className="section-shell space-y-8">
         <div>
-          <span className="inline-flex rounded-full border border-resort-500/30 bg-resort-500/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-resort-200">
-            Performance analytics
-          </span>
-          <h1 className="mt-4 text-4xl font-semibold">Resort reporting dashboard</h1>
+          <span className="badge badge-info">Performance analytics</span>
+          <h1 className="mt-4 text-heading-xl">Resort reporting dashboard</h1>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -60,20 +58,20 @@ export default function ReportsPage() {
             ['Cancelled', report?.cancelledReservations ?? 0],
             ['Revenue', `$${(report?.totalRevenue ?? 0).toLocaleString()}`],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
-              <p className="text-sm text-slate-400">{label}</p>
-              <p className="mt-3 text-3xl font-semibold">{value}</p>
+            <div key={label} className="card-surface-elevated p-5">
+              <p className="text-sm text-text-muted dark:text-dark-text-muted">{label}</p>
+              <p className="mt-3 text-3xl font-semibold text-text-primary dark:text-dark-text-primary">{value}</p>
             </div>
           ))}
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-          <h2 className="text-2xl font-semibold">Revenue by room</h2>
+        <div className="card-surface-elevated p-6">
+          <h2 className="text-heading-lg">Revenue by room</h2>
           <div className="mt-6 space-y-3">
             {(report?.revenueByRoom || []).map((entry) => (
-              <div key={entry.roomId} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4">
-                <span>{entry.roomName}</span>
-                <span className="text-resort-200">${entry.revenue.toLocaleString()}</span>
+              <div key={entry.roomId} className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+                <span className="text-text-primary dark:text-dark-text-primary">{entry.roomName}</span>
+                <span className="text-resort-600 dark:text-resort-400">${entry.revenue.toLocaleString()}</span>
               </div>
             ))}
           </div>

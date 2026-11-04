@@ -222,3 +222,11 @@ export function verifyPayment(payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export function getUserBookings(token) {
+  return request('/bookings/my', {}, token);
+}
+
+export function getUserProfile(token) {
+  return request('/auth/me', {}, token);
+}

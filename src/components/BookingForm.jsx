@@ -82,14 +82,14 @@ export default function BookingForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-glow">
+    <form onSubmit={handleSubmit} className="rounded-[2rem] border border-border bg-surface-elevated p-6 shadow-glow dark:border-dark-border dark:bg-dark-surface-elevated">
       <div className="mb-6">
-        <p className="text-xs uppercase tracking-[0.22em] text-resort-200">Check availability</p>
-        <h3 className="mt-2 text-2xl font-semibold text-white">Plan your next escape</h3>
+        <p className="text-xs uppercase tracking-[0.22em] text-resort-600 dark:text-resort-400">Check availability</p>
+        <h3 className="mt-2 text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Plan your next escape</h3>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="block text-sm text-slate-200">
+        <label className="block text-sm text-text-secondary dark:text-dark-text-secondary">
           <span className="mb-2 block">Arrival</span>
           <input
             type="date"
@@ -97,10 +97,10 @@ export default function BookingForm() {
             value={form.arrival}
             min={today}
             onChange={handleChange}
-            className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-3 text-white outline-none transition focus:border-resort-400"
+            className="form-input"
           />
         </label>
-        <label className="block text-sm text-slate-200">
+        <label className="block text-sm text-text-secondary dark:text-dark-text-secondary">
           <span className="mb-2 block">Departure</span>
           <input
             type="date"
@@ -108,16 +108,16 @@ export default function BookingForm() {
             value={form.departure}
             min={form.arrival || today}
             onChange={handleChange}
-            className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-3 text-white outline-none transition focus:border-resort-400"
+            className="form-input"
           />
         </label>
-        <label className="block text-sm text-slate-200">
+        <label className="block text-sm text-text-secondary dark:text-dark-text-secondary">
           <span className="mb-2 block">Guests</span>
           <select
             name="guests"
             value={form.guests}
             onChange={handleChange}
-            className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-3 text-white outline-none transition focus:border-resort-400"
+            className="form-select"
           >
             <option value="2">2 Adults</option>
             <option value="3">3 Adults</option>
@@ -125,13 +125,13 @@ export default function BookingForm() {
             <option value="5">Family</option>
           </select>
         </label>
-        <label className="block text-sm text-slate-200">
+        <label className="block text-sm text-text-secondary dark:text-dark-text-secondary">
           <span className="mb-2 block">Suite</span>
           <select
             name="suite"
             value={form.suite}
             onChange={handleChange}
-            className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-3 text-white outline-none transition focus:border-resort-400"
+            className="form-select"
           >
             <option>Laguna Suite</option>
             <option>Palm Courtyard Villa</option>
@@ -143,18 +143,18 @@ export default function BookingForm() {
       <button
         type="submit"
         disabled={loading}
-        className="mt-6 w-full rounded-full bg-resort-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-resort-400 disabled:cursor-not-allowed disabled:opacity-70"
+        className="mt-6 w-full rounded-full bg-resort-500 px-5 py-3 font-semibold text-text-inverse transition hover:bg-resort-400 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {loading ? 'Checking...' : 'Check availability'}
       </button>
 
       {status.message ? (
         <div className="mt-4 space-y-2">
-          <p className={`text-sm ${status.type === 'success' ? 'text-emerald-300' : 'text-red-300'}`}>
+          <p className={`text-sm ${status.type === 'success' ? 'text-state-success' : 'text-state-error'}`}>
             {status.message}
           </p>
           {status.type === 'success' ? (
-            <Link to="/auth" className="inline-flex text-sm font-medium text-resort-200 underline underline-offset-4 hover:text-white">
+            <Link to="/auth" className="inline-flex text-sm font-medium text-resort-600 underline underline-offset-4 hover:text-resort-400 dark:text-resort-400 dark:hover:text-resort-200">
               Go to guest login
             </Link>
           ) : null}

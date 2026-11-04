@@ -359,23 +359,23 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {metricCards.map((card) => (
-          <div key={card.label} className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
-            <p className="text-sm text-slate-400">{card.label}</p>
-            <p className="mt-3 text-3xl font-semibold text-white">{card.value}</p>
+          <div key={card.label} className="card-surface-elevated p-5">
+            <p className="text-sm text-text-muted dark:text-dark-text-muted">{card.label}</p>
+            <p className="mt-3 text-3xl font-semibold text-text-primary dark:text-dark-text-primary">{card.value}</p>
           </div>
         ))}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
-        <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
+        <div className="card-surface-elevated p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-white">Latest bookings</h2>
-            <span className="text-sm text-slate-400">{bookings.length} records</span>
+            <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Latest bookings</h2>
+            <span className="text-sm text-text-muted dark:text-dark-text-muted">{bookings.length} records</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="text-slate-400">
+              <thead className="text-text-muted dark:text-dark-text-muted">
                 <tr>
                   <th className="pb-3 pr-4">Guest</th>
                   <th className="pb-3 pr-4">Room</th>
@@ -385,10 +385,10 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
               </thead>
               <tbody>
                 {bookings.slice(0, 6).map((booking) => (
-                  <tr key={booking.id} className="border-t border-white/10 text-slate-200">
+                  <tr key={booking.id} className="border-t border-border text-text-primary dark:text-dark-text-primary dark:border-dark-border">
                     <td className="py-3 pr-4">{booking.guestName || 'Guest'}</td>
                     <td className="py-3 pr-4">{booking.suite}</td>
-                    <td className="py-3 pr-4"><span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs capitalize">{booking.status}</span></td>
+                    <td className="py-3 pr-4"><span className="rounded-full border border-border bg-surface-overlay/50 px-2 py-1 text-xs capitalize dark:border-dark-border dark:bg-dark-surface-overlay/50">{booking.status}</span></td>
                     <td className="py-3">${(booking.totalAmount || 0).toLocaleString()}</td>
                   </tr>
                 ))}
@@ -397,14 +397,14 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-          <h2 className="text-2xl font-semibold text-white">Audit trail</h2>
+        <div className="card-surface-elevated p-6">
+          <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Audit trail</h2>
           <div className="mt-4 space-y-3">
             {auditLogs.slice(0, 5).map((entry) => (
-              <div key={entry.id} className="rounded-2xl border border-white/10 bg-slate-950/60 p-3">
-                <p className="text-sm font-medium text-white">{entry.action}</p>
-                <p className="mt-1 text-xs text-slate-400">{entry.resource}</p>
-                <p className="mt-2 text-xs text-slate-300">{new Date(entry.createdAt).toLocaleString()}</p>
+              <div key={entry.id} className="rounded-2xl border border-border bg-surface p-3 dark:border-dark-border dark:bg-dark-surface">
+                <p className="text-sm font-medium text-text-primary dark:text-dark-text-primary">{entry.action}</p>
+                <p className="mt-1 text-xs text-text-muted dark:text-dark-text-muted">{entry.resource}</p>
+                <p className="mt-2 text-xs text-text-muted dark:text-dark-text-muted">{new Date(entry.createdAt).toLocaleString()}</p>
               </div>
             ))}
           </div>
@@ -415,30 +415,30 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
 
   const renderStaff = () => (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-        <h2 className="text-2xl font-semibold text-white">Create staff account</h2>
+      <div className="card-surface-elevated p-6">
+        <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Create staff account</h2>
         <form onSubmit={handleCreateStaff} className="mt-6 grid gap-4 md:grid-cols-2">
-          <input name="fullName" type="text" placeholder="Full name" className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-resort-400" required />
-          <input name="username" type="text" placeholder="Username" className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-resort-400" required />
-          <input name="email" type="email" placeholder="Email" className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-resort-400" required />
-          <input name="contactNumber" type="text" placeholder="Contact number" className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-resort-400" />
-          <select name="role" defaultValue="receptionist" className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-resort-400">
+          <input name="fullName" type="text" placeholder="Full name" className="form-input" required />
+          <input name="username" type="text" placeholder="Username" className="form-input" required />
+          <input name="email" type="email" placeholder="Email" className="form-input" required />
+          <input name="contactNumber" type="text" placeholder="Contact number" className="form-input" />
+          <select name="role" defaultValue="receptionist" className="form-select">
             {roles.map((role) => (
               <option key={role.id} value={role.id}>{role.name}</option>
             ))}
           </select>
-          <input name="password" type="password" placeholder="Initial password" className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-resort-400" defaultValue="TempPass123!" />
+          <input name="password" type="password" placeholder="Initial password" className="form-input" defaultValue="TempPass123!" />
           <div className="md:col-span-2 flex justify-end">
-            <button type="submit" className="rounded-full bg-resort-500 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-resort-400">Create staff</button>
+            <button type="submit" className="rounded-full bg-resort-500 px-5 py-3 text-sm font-semibold text-text-inverse hover:bg-resort-400">Create staff</button>
           </div>
         </form>
       </div>
 
-      <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-        <h2 className="text-2xl font-semibold text-white">Staff roster</h2>
+      <div className="card-surface-elevated p-6">
+        <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Staff roster</h2>
         <div className="mt-5 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="text-slate-400">
+            <thead className="text-text-muted dark:text-dark-text-muted">
               <tr>
                 <th className="pb-3 pr-4">Name</th>
                 <th className="pb-3 pr-4">Username</th>
@@ -449,13 +449,13 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
             </thead>
             <tbody>
               {staff.map((member) => (
-                <tr key={member.id} className="border-t border-white/10 text-slate-200">
+                <tr key={member.id} className="border-t border-border text-text-primary dark:text-dark-text-primary dark:border-dark-border">
                   <td className="py-3 pr-4">{member.fullName}</td>
                   <td className="py-3 pr-4">{member.username}</td>
                   <td className="py-3 pr-4">{member.role}</td>
-                  <td className="py-3 pr-4"><span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs capitalize">{member.status}</span></td>
+                  <td className="py-3 pr-4"><span className="rounded-full border border-border bg-surface-overlay/50 px-2 py-1 text-xs capitalize dark:border-dark-border dark:bg-dark-surface-overlay/50">{member.status}</span></td>
                   <td className="py-3">
-                    <button type="button" onClick={() => handleToggleStaffStatus(member.id, member.status === 'active' ? 'inactive' : 'active')} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white hover:bg-white/10">
+                    <button type="button" onClick={() => handleToggleStaffStatus(member.id, member.status === 'active' ? 'inactive' : 'active')} className="rounded-full border border-border bg-surface-overlay/50 px-3 py-1.5 text-xs text-text-primary hover:bg-surface-overlay dark:border-dark-border dark:bg-dark-surface-overlay/50 dark:text-dark-text-primary dark:hover:bg-dark-surface-overlay">
                       {member.status === 'active' ? 'Deactivate' : 'Activate'}
                     </button>
                   </td>
@@ -470,30 +470,30 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
 
   const renderRoles = () => (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-        <h2 className="text-2xl font-semibold text-white">Create custom role</h2>
+      <div className="card-surface-elevated p-6">
+        <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Create custom role</h2>
         <form onSubmit={handleCreateRole} className="mt-5 grid gap-4 md:grid-cols-2">
-          <input name="roleName" type="text" placeholder="Role name" className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-resort-400" required />
-          <input name="description" type="text" placeholder="Description" className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-resort-400" />
+          <input name="roleName" type="text" placeholder="Role name" className="form-input" required />
+          <input name="description" type="text" placeholder="Description" className="form-input" />
           <div className="md:col-span-2 flex justify-end">
-            <button type="submit" className="rounded-full bg-resort-500 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-resort-400">Save role</button>
+            <button type="submit" className="rounded-full bg-resort-500 px-5 py-3 text-sm font-semibold text-text-inverse hover:bg-resort-400">Save role</button>
           </div>
         </form>
       </div>
 
-      <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-        <h2 className="text-2xl font-semibold text-white">Assigned roles</h2>
+      <div className="card-surface-elevated p-6">
+        <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Assigned roles</h2>
         <div className="mt-5 space-y-4">
           {roles.map((role) => (
-            <div key={role.id} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+            <div key={role.id} className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-lg font-semibold text-white">{role.name}</p>
-                  <p className="text-sm text-slate-400">{role.description}</p>
+                  <p className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{role.name}</p>
+                  <p className="text-sm text-text-muted dark:text-dark-text-muted">{role.description}</p>
                 </div>
                 <div className="flex gap-2">
                   {!role.isSystem && (
-                    <button type="button" onClick={() => handleDeleteRole(role.id)} className="rounded-full border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200 hover:bg-red-500/20">Delete</button>
+                    <button type="button" onClick={() => handleDeleteRole(role.id)} className="rounded-full border border-state-error/40 bg-state-error/10 px-3 py-2 text-xs text-state-error hover:bg-state-error/20">Delete</button>
                   )}
                 </div>
               </div>
@@ -502,11 +502,11 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                 handleUpdateRole(role.id, event.currentTarget);
               }}>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <input name="roleName" defaultValue={role.name} className="rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none" />
-                  <input name="description" defaultValue={role.description} className="rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none" />
+                  <input name="roleName" defaultValue={role.name} className="form-input" />
+                  <input name="description" defaultValue={role.description} className="form-input" />
                 </div>
                 <div className="mt-3 flex justify-end">
-                  <button type="submit" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/10">Update role</button>
+                  <button type="submit" className="rounded-full border border-border bg-surface-elevated/50 px-4 py-2 text-sm text-text-primary hover:bg-surface-overlay dark:border-dark-border dark:bg-dark-surface-elevated/50 dark:text-dark-text-primary dark:hover:bg-dark-surface-overlay">Update role</button>
                 </div>
               </form>
             </div>
@@ -517,28 +517,28 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
   );
 
   const renderPermissions = () => (
-    <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-      <h2 className="text-2xl font-semibold text-white">Role permissions</h2>
+    <div className="card-surface-elevated p-6">
+      <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Role permissions</h2>
       <div className="mt-6 space-y-6">
         {roles.map((role) => (
-          <div key={role.id} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+          <div key={role.id} className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-lg font-semibold text-white">{role.name}</p>
-              <button type="button" onClick={() => handleRolePermissionSave(role.id)} className="rounded-full bg-resort-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-resort-400">Save permissions</button>
+              <p className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{role.name}</p>
+              <button type="button" onClick={() => handleRolePermissionSave(role.id)} className="rounded-full bg-resort-500 px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-resort-400">Save permissions</button>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               {Object.entries(permissionsCatalog).map(([groupName, permissionsList]) => (
-                <div key={groupName} className="rounded-2xl border border-white/10 bg-slate-900/80 p-4">
-                  <p className="mb-3 text-sm font-semibold uppercase tracking-[0.15em] text-slate-300">{groupName}</p>
+                <div key={groupName} className="rounded-2xl border border-border bg-surface-elevated/80 p-4 dark:border-dark-border dark:bg-dark-surface-elevated/80">
+                  <p className="mb-3 text-sm font-semibold uppercase tracking-[0.15em] text-text-muted dark:text-dark-text-muted">{groupName}</p>
                   <div className="space-y-2">
                     {(permissionsList || []).map((permission) => (
-                      <label key={permission} className="flex items-center gap-3 text-sm text-slate-200">
+                      <label key={permission} className="flex items-center gap-3 text-sm text-text-secondary dark:text-dark-text-secondary">
                         <input
                           type="checkbox"
                           data-role-id={role.id}
                           value={permission}
                           defaultChecked={role.permissions.includes(permission) || role.id === 'super-admin'}
-                          className="h-4 w-4 rounded border-white/20 bg-slate-950 text-resort-500"
+                          className="form-checkbox"
                         />
                         <span>{permission}</span>
                       </label>
@@ -555,24 +555,24 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
 
   const renderBookings = () => (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
+      <div className="card-surface-elevated p-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-2xl font-semibold text-white">Reservations calendar</h2>
+          <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Reservations calendar</h2>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
-              className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/10"
+              className="rounded-full border border-border bg-surface-elevated px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-overlay dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-secondary dark:hover:bg-dark-surface-overlay"
             >
               Prev
             </button>
-            <span className="min-w-[150px] text-center text-sm font-medium text-slate-200">
+            <span className="min-w-[150px] text-center text-sm font-medium text-text-primary dark:text-dark-text-primary">
               {calendarMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
             </span>
             <button
               type="button"
               onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
-              className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/10"
+              className="rounded-full border border-border bg-surface-elevated px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-overlay dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-secondary dark:hover:bg-dark-surface-overlay"
             >
               Next
             </button>
@@ -580,8 +580,8 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-3">
-            <div className="grid grid-cols-7 gap-2 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <div className="rounded-2xl border border-border bg-surface p-3 dark:border-dark-border dark:bg-dark-surface">
+            <div className="grid grid-cols-7 gap-2 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-text-muted dark:text-dark-text-muted">
               {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((dayLabel) => (
                 <div key={dayLabel} className="py-2">
                   {dayLabel}
@@ -606,18 +606,18 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                   onClick={() => setSelectedCalendarDate(dayKey)}
                   className={`min-h-[92px] rounded-2xl border p-2 text-left transition ${
                     isSelected
-                      ? 'border-resort-400 bg-resort-500/10'
+                      ? 'border-resort-500 bg-resort-500/10 text-text-primary'
                       : dayBookings.length > 0
                         ? 'border-emerald-500/40 bg-emerald-500/10'
                         : !manualAvailability.available || hasManualNote
                           ? 'border-amber-400/40 bg-amber-500/10'
                           : isCurrentMonth
-                            ? 'border-white/10 bg-white text-slate-900'
-                            : 'border-white/5 bg-slate-900/80 text-slate-500'
+                            ? 'border-border bg-surface text-text-primary dark:border-dark-border dark:bg-dark-surface dark:text-dark-text-primary'
+                            : 'border-border bg-surface-elevated text-text-muted dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-muted'
                   } ${isPast && !isSelected ? 'opacity-60' : ''}`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className={`text-sm font-medium ${isCurrentMonth ? 'text-current' : 'text-slate-500'}`}>
+                    <span className={`text-sm font-medium ${isCurrentMonth ? 'text-text-primary dark:text-dark-text-primary' : 'text-text-muted dark:text-dark-text-muted'}`}>
                       {day.getDate()}
                     </span>
                     {dayBookings.length > 0 && <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />}
@@ -626,12 +626,12 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
 
                   <div className="mt-3 space-y-1">
                     {dayBookings.slice(0, 2).map((booking) => (
-                      <div key={booking.id} className="truncate rounded bg-slate-950/80 px-1.5 py-0.5 text-[10px] text-emerald-100">
+                      <div key={booking.id} className="truncate rounded bg-surface/50 px-1.5 py-0.5 text-[10px] text-emerald-100 dark:bg-dark-surface/50">
                         {booking.guestName}
                       </div>
                     ))}
                     {dayBookings.length > 2 && (
-                      <div className="text-[10px] text-slate-300">+{dayBookings.length - 2} more</div>
+                      <div className="text-[10px] text-text-muted dark:text-dark-text-muted">+{dayBookings.length - 2} more</div>
                     )}
                   </div>
                 </button>
@@ -640,9 +640,9 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-5">
+          <div className="rounded-2xl border border-border bg-surface p-5 dark:border-dark-border dark:bg-dark-surface">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-lg font-semibold text-white">{new Date(`${selectedCalendarDate}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</h3>
+              <h3 className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{new Date(`${selectedCalendarDate}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</h3>
               <span className={`rounded-full border px-2 py-1 text-[10px] uppercase tracking-[0.18em] ${selectedDateAvailability.available ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200' : 'border-amber-500/30 bg-amber-500/10 text-amber-200'}`}>
                 {selectedDateAvailability.available ? 'Open' : 'Closed'}
               </span>
@@ -653,20 +653,20 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                 {selectedDateBookings.map((booking) => (
                   <div key={booking.id} className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-3">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="font-medium text-white">{booking.guestName}</p>
-                      <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-emerald-200">
+                      <p className="font-medium text-text-primary dark:text-dark-text-primary">{booking.guestName}</p>
+                      <span className="rounded-full border border-border bg-surface-overlay/50 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-emerald-200 dark:border-dark-border dark:bg-dark-surface-overlay/50">
                         {booking.status}
                       </span>
                     </div>
-                    <p className="mt-2 text-sm text-slate-200">{booking.suite}</p>
-                    <p className="mt-1 text-xs text-slate-300">
+                    <p className="mt-2 text-sm text-text-secondary dark:text-dark-text-secondary">{booking.suite}</p>
+                    <p className="mt-1 text-xs text-text-muted dark:text-dark-text-muted">
                       {booking.arrival} to {booking.departure}
                     </p>
-                    <p className="mt-1 text-xs text-slate-300">Ref: {booking.bookingReference || booking.id}</p>
+                    <p className="mt-1 text-xs text-text-muted dark:text-dark-text-muted">Ref: {booking.bookingReference || booking.id}</p>
                     <button
                       type="button"
                       onClick={() => handleStatusUpdate(booking.id, booking.status === 'confirmed' ? 'pending' : 'confirmed')}
-                      className="mt-3 rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+                      className="mt-3 rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-text-inverse hover:bg-emerald-400"
                     >
                       {booking.status === 'confirmed' ? 'Mark pending' : 'Approve booking'}
                     </button>
@@ -674,12 +674,12 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                 ))}
               </div>
             ) : (
-              <p className="mt-4 text-sm text-slate-300">No reservations on this date. The day is available for booking.</p>
+              <p className="mt-4 text-sm text-text-muted dark:text-dark-text-muted">No reservations on this date. The day is available for booking.</p>
             )}
 
-            <div className="mt-6 border-t border-white/10 pt-4">
+            <div className="mt-6 border-t border-border pt-4 dark:border-dark-border">
               <div className="flex items-center justify-between gap-3">
-                <label className="block text-xs uppercase tracking-[0.18em] text-slate-400">Availability note</label>
+                <label className="block text-xs uppercase tracking-[0.18em] text-text-muted dark:text-dark-text-muted">Availability note</label>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -711,7 +711,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                     },
                   }));
                 }}
-                className="mt-3 min-h-[90px] w-full rounded-2xl border border-white/10 bg-slate-950 px-3 py-3 text-sm text-white outline-none transition focus:border-resort-400"
+                className="form-textarea dark:border-dark-border"
                 placeholder="Add a note if this date is unavailable due to maintenance, closure, or special restrictions..."
               />
             </div>
@@ -719,11 +719,11 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-        <h2 className="text-2xl font-semibold text-white">Approved reservations</h2>
+      <div className="card-surface-elevated p-6">
+        <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Approved reservations</h2>
         <div className="mt-5 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="text-slate-400">
+            <thead className="text-text-muted dark:text-dark-text-muted">
               <tr>
                 <th className="pb-3 pr-4">Reference</th>
                 <th className="pb-3 pr-4">Guest</th>
@@ -735,16 +735,16 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
             </thead>
             <tbody>
               {normalizedBookings.map((booking) => (
-                <tr key={booking.id} className="border-t border-white/10 text-slate-200">
+                <tr key={booking.id} className="border-t border-border text-text-primary dark:text-dark-text-primary dark:border-dark-border">
                   <td className="py-3 pr-4">{booking.bookingReference || booking.id}</td>
                   <td className="py-3 pr-4">{booking.guestName || 'Guest'}</td>
                   <td className="py-3 pr-4">{booking.suite}</td>
                   <td className="py-3 pr-4">{booking.arrival} → {booking.departure}</td>
-                  <td className="py-3 pr-4"><span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs capitalize">{booking.status}</span></td>
+                  <td className="py-3 pr-4"><span className="rounded-full border border-border bg-surface-overlay/50 px-2 py-1 text-xs capitalize dark:border-dark-border dark:bg-dark-surface-overlay/50">{booking.status}</span></td>
                   <td className="py-3">
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => handleStatusUpdate(booking.id, 'confirmed')} className="rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-medium text-slate-950">Confirm</button>
-                      <button type="button" onClick={() => handleStatusUpdate(booking.id, 'cancelled')} className="rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs text-red-200">Cancel</button>
+                      <button type="button" onClick={() => handleStatusUpdate(booking.id, 'confirmed')} className="rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-medium text-text-inverse">Confirm</button>
+                      <button type="button" onClick={() => handleStatusUpdate(booking.id, 'cancelled')} className="rounded-full border border-state-error/40 bg-state-error/10 px-3 py-1.5 text-xs text-state-error hover:bg-state-error/20">Cancel</button>
                     </div>
                   </td>
                 </tr>
@@ -757,18 +757,18 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
   );
 
   const renderRooms = () => (
-    <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-      <h2 className="text-2xl font-semibold text-white">Room inventory</h2>
+    <div className="card-surface-elevated p-6">
+      <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Room inventory</h2>
       <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {bookings.length === 0 ? (
-          <p className="text-slate-400">No room inventory found.</p>
+          <p className="text-text-muted dark:text-dark-text-muted">No room inventory found.</p>
         ) : (
           <>
             {['Laguna Suite', 'Palm Courtyard Villa', 'Coral Horizon Room'].map((roomName, index) => (
-              <div key={roomName} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-                <p className="text-lg font-semibold text-white">{roomName}</p>
-                <p className="mt-2 text-sm text-slate-300">Status: {index === 0 ? 'Available' : 'Ready'} </p>
-                <p className="mt-1 text-sm text-slate-400">Capacity: {index === 1 ? '4 guests' : '2 guests'}</p>
+              <div key={roomName} className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+                <p className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{roomName}</p>
+                <p className="mt-2 text-sm text-text-secondary dark:text-dark-text-secondary">Status: {index === 0 ? 'Available' : 'Ready'} </p>
+                <p className="mt-1 text-sm text-text-muted dark:text-dark-text-muted">Capacity: {index === 1 ? '4 guests' : '2 guests'}</p>
               </div>
             ))}
           </>
@@ -778,17 +778,17 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
   );
 
   const renderInquiries = () => (
-    <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-      <h2 className="text-2xl font-semibold text-white">Guest inquiries</h2>
+    <div className="card-surface-elevated p-6">
+      <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Guest inquiries</h2>
       <div className="mt-5 space-y-3">
         {inquiries.length === 0 ? (
-          <p className="text-slate-400">No guest inquiries at the moment.</p>
+          <p className="text-text-muted dark:text-dark-text-muted">No guest inquiries at the moment.</p>
         ) : (
           inquiries.map((inquiry) => (
-            <div key={inquiry.id} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-              <p className="font-medium text-white">{inquiry.name}</p>
-              <p className="text-sm text-slate-400">{inquiry.email}</p>
-              <p className="mt-2 text-sm text-slate-200">{inquiry.message}</p>
+            <div key={inquiry.id} className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+              <p className="font-medium text-text-primary dark:text-dark-text-primary">{inquiry.name}</p>
+              <p className="text-sm text-text-secondary dark:text-dark-text-secondary">{inquiry.email}</p>
+              <p className="mt-2 text-sm text-text-secondary dark:text-dark-text-secondary">{inquiry.message}</p>
             </div>
           ))
         )}
@@ -801,38 +801,38 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
 
     return (
       <div className="grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
-        <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-5">
-          <h2 className="text-2xl font-semibold text-white">Support chats</h2>
+        <div className="card-surface-elevated p-5">
+          <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Support chats</h2>
           <div className="mt-5 space-y-3">
             {chatThreads.length === 0 ? (
-              <p className="text-sm text-slate-400">No active customer conversations yet.</p>
+              <p className="text-sm text-text-muted dark:text-dark-text-muted">No active customer conversations yet.</p>
             ) : (
               chatThreads.map((thread) => (
                 <button
                   key={thread.id}
                   type="button"
                   onClick={() => setSelectedChatThreadId(thread.id)}
-                  className={`w-full rounded-2xl border p-3 text-left transition ${selectedThread?.id === thread.id ? 'border-resort-500/40 bg-resort-500/10' : 'border-white/10 bg-slate-950/60 hover:bg-slate-950'}`}
+                  className={`w-full rounded-2xl border p-3 text-left transition ${selectedThread?.id === thread.id ? 'border-resort-500 bg-resort-500/10' : 'border-border bg-surface dark:border-dark-border dark:bg-dark-surface'}`}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-medium text-white">{thread.customerName}</p>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-slate-300">{thread.status}</span>
+                    <p className="font-medium text-text-primary dark:text-dark-text-primary">{thread.customerName}</p>
+                    <span className="rounded-full border border-border bg-surface-overlay/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-text-muted dark:border-dark-border dark:bg-dark-surface-overlay/50 dark:text-dark-text-muted">{thread.status}</span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-400">{thread.customerEmail}</p>
-                  <p className="mt-2 line-clamp-2 text-sm text-slate-200">{thread.messages?.[thread.messages.length - 1]?.text || 'No messages yet.'}</p>
+                  <p className="mt-2 text-xs text-text-muted dark:text-dark-text-muted">{thread.customerEmail}</p>
+                  <p className="mt-2 line-clamp-2 text-sm text-text-secondary dark:text-dark-text-secondary">{thread.messages?.[thread.messages.length - 1]?.text || 'No messages yet.'}</p>
                 </button>
               ))
             )}
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-5">
+        <div className="card-surface-elevated p-5">
           {selectedThread ? (
             <>
-              <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div className="flex items-center justify-between gap-3 border-b border-border pb-4 dark:border-dark-border">
                 <div>
-                  <p className="text-lg font-semibold text-white">{selectedThread.customerName}</p>
-                  <p className="text-sm text-slate-400">{selectedThread.customerEmail}</p>
+                  <p className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{selectedThread.customerName}</p>
+                  <p className="text-sm text-text-secondary dark:text-dark-text-secondary">{selectedThread.customerEmail}</p>
                 </div>
                 <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-emerald-200">{selectedThread.status}</span>
               </div>
@@ -840,7 +840,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
               <div className="mt-5 space-y-3">
                 {(selectedThread.messages || []).map((message) => (
                   <div key={message.id} className={`flex ${message.sender === 'customer' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${message.sender === 'customer' ? 'bg-resort-500 text-slate-950' : message.sender === 'admin' ? 'bg-slate-800 text-white' : 'bg-slate-700 text-slate-100'}`}>
+                    <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${message.sender === 'customer' ? 'bg-resort-500 text-text-inverse' : message.sender === 'admin' ? 'bg-surface-elevated text-text-primary dark:bg-dark-surface-elevated dark:text-dark-text-primary' : 'bg-surface/50 text-text-secondary dark:bg-dark-surface/50 dark:text-dark-text-secondary'}`}>
                       <p className="mb-1 text-[10px] uppercase tracking-[0.14em] text-current/70">{message.senderName}</p>
                       <p>{message.text}</p>
                     </div>
@@ -848,22 +848,22 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                 ))}
               </div>
 
-              <form onSubmit={handleChatReply} className="mt-5 border-t border-white/10 pt-4">
-                <label className="block text-xs uppercase tracking-[0.18em] text-slate-400">Reply</label>
+              <form onSubmit={handleChatReply} className="mt-5 border-t border-border pt-4 dark:border-dark-border">
+                <label className="block text-xs uppercase tracking-[0.18em] text-text-muted dark:text-dark-text-muted">Reply</label>
                 <textarea
                   value={chatReply}
                   onChange={(event) => setChatReply(event.target.value)}
                   rows={4}
-                  className="mt-3 w-full rounded-2xl border border-white/10 bg-slate-950 px-3 py-3 text-sm text-white outline-none focus:border-resort-400"
+                  className="form-textarea dark:border-dark-border"
                   placeholder="Type a reply to the customer..."
                 />
                 <div className="mt-3 flex justify-end">
-                  <button type="submit" className="rounded-full bg-resort-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-resort-400">Send reply</button>
+                  <button type="submit" className="rounded-full bg-resort-500 px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-resort-400">Send reply</button>
                 </div>
               </form>
             </>
           ) : (
-            <p className="text-sm text-slate-400">Select a chat conversation to respond.</p>
+            <p className="text-sm text-text-muted dark:text-dark-text-muted">Select a chat conversation to respond.</p>
           )}
         </div>
       </div>
@@ -871,33 +871,33 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
   };
 
   const renderReports = () => (
-    <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-      <h2 className="text-2xl font-semibold text-white">Operational reports</h2>
+    <div className="card-surface-elevated p-6">
+      <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Operational reports</h2>
       <div className="mt-5 grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-          <p className="text-sm text-slate-400">Monthly revenue</p>
-          <p className="mt-2 text-3xl font-semibold text-white">${(metrics?.totalRevenue || 0).toLocaleString()}</p>
+        <div className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+          <p className="text-sm text-text-muted dark:text-dark-text-muted">Monthly revenue</p>
+          <p className="mt-2 text-3xl font-semibold text-text-primary dark:text-dark-text-primary">${(metrics?.totalRevenue || 0).toLocaleString()}</p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-          <p className="text-sm text-slate-400">Occupancy</p>
-          <p className="mt-2 text-3xl font-semibold text-white">{metrics?.occupancyRate ?? 0}%</p>
+        <div className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+          <p className="text-sm text-text-muted dark:text-dark-text-muted">Occupancy</p>
+          <p className="mt-2 text-3xl font-semibold text-text-primary dark:text-dark-text-primary">{metrics?.occupancyRate ?? 0}%</p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-          <p className="text-sm text-slate-400">Guest feedback</p>
-          <p className="mt-2 text-3xl font-semibold text-white">4.9/5</p>
+        <div className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+          <p className="text-sm text-text-muted dark:text-dark-text-muted">Guest feedback</p>
+          <p className="mt-2 text-3xl font-semibold text-text-primary dark:text-dark-text-primary">4.9/5</p>
         </div>
       </div>
     </div>
   );
 
   const renderSettings = () => (
-    <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-      <h2 className="text-2xl font-semibold text-white">System settings</h2>
+    <div className="card-surface-elevated p-6">
+      <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">System settings</h2>
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         {Object.entries(settings).map(([key, value]) => (
-          <div key={key} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{key}</p>
-            <p className="mt-2 text-lg font-medium text-white">{String(value)}</p>
+          <div key={key} className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+            <p className="text-xs uppercase tracking-[0.2em] text-text-muted dark:text-dark-text-muted">{key}</p>
+            <p className="mt-2 text-lg font-medium text-text-primary dark:text-dark-text-primary">{String(value)}</p>
           </div>
         ))}
       </div>
@@ -905,24 +905,24 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
   );
 
   const renderProfile = () => (
-    <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-      <h2 className="text-2xl font-semibold text-white">Profile</h2>
+    <div className="card-surface-elevated p-6">
+      <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Profile</h2>
       <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Full name</p>
-          <p className="mt-2 text-lg text-white">{user?.name}</p>
+        <div className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+          <p className="text-xs uppercase tracking-[0.2em] text-text-muted dark:text-dark-text-muted">Full name</p>
+          <p className="mt-2 text-lg text-text-primary dark:text-dark-text-primary">{user?.name}</p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Email</p>
-          <p className="mt-2 text-lg text-white">{user?.email}</p>
+        <div className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+          <p className="text-xs uppercase tracking-[0.2em] text-text-muted dark:text-dark-text-muted">Email</p>
+          <p className="mt-2 text-lg text-text-primary dark:text-dark-text-primary">{user?.email}</p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Role</p>
-          <p className="mt-2 text-lg text-white">{user?.role}</p>
+        <div className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+          <p className="text-xs uppercase tracking-[0.2em] text-text-muted dark:text-dark-text-muted">Role</p>
+          <p className="mt-2 text-lg text-text-primary dark:text-dark-text-primary">{user?.role}</p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Permissions</p>
-          <p className="mt-2 text-lg text-white">{Array.from(permissions).slice(0, 3).join(', ') || 'None'}</p>
+        <div className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+          <p className="text-xs uppercase tracking-[0.2em] text-text-muted dark:text-dark-text-muted">Permissions</p>
+          <p className="mt-2 text-lg text-text-primary dark:text-dark-text-primary">{Array.from(permissions).slice(0, 3).join(', ') || 'None'}</p>
         </div>
       </div>
     </div>
@@ -943,34 +943,34 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-8 text-white">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-slate-900/80 p-4 md:flex-row md:items-center md:justify-between">
+    <div className="min-h-screen bg-surface px-4 py-8 text-text-primary dark:bg-dark-surface dark:text-dark-text-primary">
+      <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+        <header className="flex flex-col gap-4 rounded-3xl border border-border bg-surface-elevated p-4 dark:border-dark-border dark:bg-dark-surface-elevated md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Management portal</p>
-            <h1 className="mt-1 text-2xl font-semibold">Resort operations</h1>
+            <p className="text-xs uppercase tracking-[0.2em] text-text-muted dark:text-dark-text-muted">Management portal</p>
+            <h1 className="mt-1 text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Resort operations</h1>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button" className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200">🔔 Alerts</button>
-            <div className="flex items-center gap-3 rounded-full border border-white/10 bg-slate-950/60 px-3 py-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-resort-500/20 text-sm font-semibold text-resort-200">{user?.name?.slice(0, 1).toUpperCase() || 'A'}</div>
+            <button type="button" className="rounded-full border border-border bg-surface-elevated px-3 py-2 text-sm text-text-secondary hover:bg-surface-overlay dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-secondary dark:hover:bg-dark-surface-overlay">🔔 Alerts</button>
+            <div className="flex items-center gap-3 rounded-full border border-border bg-surface-elevated px-3 py-2 dark:border-dark-border dark:bg-dark-surface-elevated">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-resort-500/10 text-sm font-semibold text-resort-600 dark:bg-resort-500/20 dark:text-resort-400">{user?.name?.slice(0, 1).toUpperCase() || 'A'}</div>
               <div>
-                <p className="text-sm font-medium text-white">{user?.name || 'Admin'}</p>
-                <p className="text-xs text-slate-400">{user?.role || 'admin'}</p>
+                <p className="text-sm font-medium text-text-primary dark:text-dark-text-primary">{user?.name || 'Admin'}</p>
+                <p className="text-xs text-text-muted dark:text-dark-text-muted">{user?.role || 'admin'}</p>
               </div>
             </div>
-            <button type="button" onClick={signOut} className="rounded-full border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200 hover:bg-red-500/20">Sign out</button>
+            <button type="button" onClick={signOut} className="rounded-full border border-state-error/40 bg-state-error/10 px-3 py-2 text-sm text-state-error hover:bg-state-error/20">Sign out</button>
           </div>
         </header>
 
         <div className="flex flex-col gap-6 md:flex-row">
-          <aside className="w-full max-w-xs rounded-3xl border border-white/10 bg-slate-900/80 p-4 text-slate-200 md:w-72">
-            <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-resort-500/20 text-lg font-semibold text-resort-200">AC</div>
+          <aside className="w-full max-w-xs rounded-3xl border border-border bg-surface-elevated p-4 text-text-secondary dark:border-dark-border dark:bg-dark-surface-elevated md:w-72">
+            <div className="mb-6 flex items-center gap-3 border-b border-border pb-4 dark:border-dark-border">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-resort-500/10 text-lg font-semibold text-resort-600 dark:bg-resort-500/20 dark:text-resort-400">AC</div>
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Resort</p>
-                <h2 className="text-lg font-semibold text-white">Admin Suite</h2>
+                <p className="text-xs uppercase tracking-[0.2em] text-text-muted dark:text-dark-text-muted">Resort</p>
+                <h2 className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">Admin Suite</h2>
               </div>
             </div>
 
@@ -980,7 +980,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                   key={item.key}
                   to={item.path}
                   className={`flex items-center justify-between rounded-2xl px-3 py-2.5 text-sm transition ${
-                    currentView === item.key ? 'bg-resort-500 text-slate-950 font-semibold' : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    currentView === item.key ? 'bg-resort-500/10 text-resort-600 font-semibold dark:bg-resort-500/20 dark:text-resort-400' : 'text-text-secondary hover:bg-surface hover:text-text-primary dark:text-dark-text-secondary dark:hover:bg-dark-surface dark:hover:text-dark-text-primary'
                   }`}
                 >
                   <span>{item.label}</span>
@@ -991,9 +991,9 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
 
           <main className="flex-1">
             {loading ? (
-              <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-8 text-white">Loading admin console...</div>
+              <div className="rounded-3xl border border-border bg-surface-elevated p-8 text-text-primary dark:border-dark-border dark:bg-dark-surface-elevated">Loading admin console...</div>
             ) : error ? (
-              <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-6 text-red-100">{error}</div>
+              <div className="rounded-3xl border border-state-error/30 bg-state-error/10 p-6 text-state-error">{error}</div>
             ) : (
               contentMap[currentView] || contentMap.dashboard
             )}
