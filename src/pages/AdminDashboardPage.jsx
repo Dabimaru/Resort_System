@@ -7,6 +7,7 @@ import {
   getAdminAuditLogs,
   getAdminAvailability,
   getAdminBookings,
+  getAdminPayments,
   getAdminChatThreads,
   getAdminInquiries,
   getAdminPermissions,
@@ -51,6 +52,19 @@ const defaultPermissionState = {
   settings: ['settings.view'],
 };
 
+const statusBadgeClass = (status) => {
+  switch (status) {
+    case 'approved':
+      return 'border-state-success/40 bg-state-success/10 text-state-success';
+    case 'processing':
+      return 'border-state-info/40 bg-state-info/10 text-state-info';
+    case 'cancelled':
+      return 'border-state-error/40 bg-state-error/10 text-state-error';
+    default:
+      return 'border-state-warning/40 bg-state-warning/10 text-state-warning';
+  }
+};
+
 export default function AdminDashboardPage({ view = 'dashboard' }) {
   const location = useLocation();
   const currentView = useMemo(() => {
@@ -64,6 +78,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
   const [stats, setStats] = useState(null);
   const [metrics, setMetrics] = useState(null);
   const [bookings, setBookings] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [staff, setStaff] = useState([]);
   const [roles, setRoles] = useState([]);
   const [permissionsCatalog, setPermissionsCatalog] = useState(defaultPermissionState);
@@ -107,10 +122,11 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
 
     try {
       setLoading(true);
-      const [statsResponse, metricsResponse, bookingsResponse, staffResponse, rolesResponse, permissionsResponse, inquiriesResponse, chatResponse, settingsResponse, auditResponse, availabilityResponse] = await Promise.all([
+      const [statsResponse, metricsResponse, bookingsResponse, paymentsResponse, staffResponse, rolesResponse, permissionsResponse, inquiriesResponse, chatResponse, settingsResponse, auditResponse, availabilityResponse] = await Promise.all([
         getDashboardStats(token).catch(() => null),
         getDashboardMetrics(token).catch(() => null),
         getAdminBookings(token).catch(() => ({ bookings: [] })),
+        getAdminPayments(token).catch(() => ({ payments: [] })),
         getAdminStaff(token).catch(() => ({ staff: [] })),
         getAdminRoles(token).catch(() => ({ roles: [] })),
         getAdminPermissions(token).catch(() => ({ permissions: defaultPermissionState })),
@@ -124,6 +140,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
       setStats(statsResponse?.stats || null);
       setMetrics(metricsResponse?.metrics || null);
       setBookings(bookingsResponse?.bookings || []);
+      setPayments(Array.isArray(paymentsResponse) ? paymentsResponse : paymentsResponse?.payments || []);
       setStaff(staffResponse?.staff || []);
       setRoles(rolesResponse?.roles || []);
       setPermissionsCatalog(permissionsResponse?.permissions || defaultPermissionState);
@@ -344,10 +361,14 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
     return <AdminLoginPage />;
   }
 
+  const statusCount = (status) =>
+    bookings.filter((booking) => (booking.status || 'pending') === status).length;
+
   const metricCards = [
-    { label: 'Total bookings', value: stats?.totalBookings ?? metrics?.totalReservations ?? 0 },
-    { label: 'Pending', value: stats?.pendingReservations ?? metrics?.pendingReservations ?? 0 },
-    { label: 'Confirmed', value: stats?.confirmedReservations ?? metrics?.confirmedReservations ?? 0 },
+    { label: 'Total bookings', value: stats?.totalBookings ?? metrics?.totalReservations ?? bookings.length },
+    { label: 'Pending', value: statusCount('pending') },
+    { label: 'Processing', value: statusCount('processing') },
+    { label: 'Approved', value: statusCount('approved') },
     { label: 'Available rooms', value: stats?.availableRooms ?? metrics?.availableRooms ?? 0 },
     { label: 'Occupied rooms', value: stats?.occupiedRooms ?? metrics?.occupiedRooms ?? 0 },
     { label: 'Register customers', value: stats?.totalCustomers ?? 0 },
@@ -665,10 +686,10 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                     <p className="mt-1 text-xs text-text-muted dark:text-dark-text-muted">Ref: {booking.bookingReference || booking.id}</p>
                     <button
                       type="button"
-                      onClick={() => handleStatusUpdate(booking.id, booking.status === 'confirmed' ? 'pending' : 'confirmed')}
+                      onClick={() => handleStatusUpdate(booking.id, booking.status === 'processing' ? 'pending' : 'processing')}
                       className="mt-3 rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-text-inverse hover:bg-emerald-400"
                     >
-                      {booking.status === 'confirmed' ? 'Mark pending' : 'Approve booking'}
+                      {booking.status === 'processing' ? 'Move back to pending' : 'Approve reservation'}
                     </button>
                   </div>
                 ))}
@@ -730,20 +751,37 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                 <th className="pb-3 pr-4">Room</th>
                 <th className="pb-3 pr-4">Dates</th>
                 <th className="pb-3 pr-4">Status</th>
+                <th className="pb-3 pr-4">Payment</th>
                 <th className="pb-3">Action</th>
               </tr>
             </thead>
             <tbody>
               {normalizedBookings.map((booking) => (
                 <tr key={booking.id} className="border-t border-border text-text-primary dark:text-dark-text-primary dark:border-dark-border">
-                  <td className="py-3 pr-4">{booking.bookingReference || booking.id}</td>
+                  <td className="py-3 pr-4 font-mono text-xs">{booking.bookingReference || booking.id}</td>
                   <td className="py-3 pr-4">{booking.guestName || 'Guest'}</td>
                   <td className="py-3 pr-4">{booking.suite}</td>
                   <td className="py-3 pr-4">{booking.arrival} → {booking.departure}</td>
-                  <td className="py-3 pr-4"><span className="rounded-full border border-border bg-surface-overlay/50 px-2 py-1 text-xs capitalize dark:border-dark-border dark:bg-dark-surface-overlay/50">{booking.status}</span></td>
+                  <td className="py-3 pr-4">
+                    <span className={`rounded-full border px-2 py-1 text-xs capitalize ${statusBadgeClass(booking.status)}`}>
+                      {booking.status || 'pending'}
+                    </span>
+                  </td>
+                  <td className="py-3 pr-4 text-xs">
+                    {booking.paymentReference ? (
+                      <>
+                        <p className="font-mono text-text-primary dark:text-dark-text-primary">{booking.paymentReference}</p>
+                        <p className="mt-1 text-text-muted dark:text-dark-text-muted">
+                          {booking.paymentType === 'full' ? 'Full' : 'Downpayment'} · ${Number(booking.amountPaid || 0).toLocaleString()}
+                        </p>
+                      </>
+                    ) : (
+                      <span className="text-text-muted dark:text-dark-text-muted">Unpaid</span>
+                    )}
+                  </td>
                   <td className="py-3">
-                    <div className="flex gap-2">
-                      <button type="button" onClick={() => handleStatusUpdate(booking.id, 'confirmed')} className="rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-medium text-text-inverse">Confirm</button>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" onClick={() => handleStatusUpdate(booking.id, 'processing')} className="rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-medium text-text-inverse">Approve</button>
                       <button type="button" onClick={() => handleStatusUpdate(booking.id, 'cancelled')} className="rounded-full border border-state-error/40 bg-state-error/10 px-3 py-1.5 text-xs text-state-error hover:bg-state-error/20">Cancel</button>
                     </div>
                   </td>
@@ -752,6 +790,50 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="card-surface-elevated p-6">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Payment audit</h2>
+          <span className="text-sm text-text-muted dark:text-dark-text-muted">{payments.length} records</span>
+        </div>
+
+        {payments.length === 0 ? (
+          <p className="mt-4 text-sm text-text-muted dark:text-dark-text-muted">No payments recorded yet.</p>
+        ) : (
+          <div className="mt-5 overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="text-text-muted dark:text-dark-text-muted">
+                <tr>
+                  <th className="pb-3 pr-4">Payment reference</th>
+                  <th className="pb-3 pr-4">Reservation</th>
+                  <th className="pb-3 pr-4">Guest</th>
+                  <th className="pb-3 pr-4">Type</th>
+                  <th className="pb-3 pr-4">Method</th>
+                  <th className="pb-3 pr-4">Amount</th>
+                  <th className="pb-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments.map((payment) => (
+                  <tr key={payment.id} className="border-t border-border dark:border-dark-border">
+                    <td className="py-3 pr-4 font-mono text-xs">{payment.paymentReference}</td>
+                    <td className="py-3 pr-4 font-mono text-xs">{payment.bookingReference}</td>
+                    <td className="py-3 pr-4">{payment.guestName || payment.customerEmail || 'Guest'}</td>
+                    <td className="py-3 pr-4 capitalize">{payment.paymentType === 'full' ? 'Full payment' : 'Downpayment'}</td>
+                    <td className="py-3 pr-4 uppercase">{payment.method}</td>
+                    <td className="py-3 pr-4">${Number(payment.amount || 0).toLocaleString()}</td>
+                    <td className="py-3">
+                      <span className={`rounded-full border px-2 py-1 text-xs capitalize ${payment.status === 'paid' ? 'border-state-success/40 bg-state-success/10 text-state-success' : 'border-state-warning/40 bg-state-warning/10 text-state-warning'}`}>
+                        {payment.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

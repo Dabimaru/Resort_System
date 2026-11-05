@@ -18,6 +18,29 @@ export const requireAuth = async (req, res, next) => {
   return next();
 };
 
+// Attaches req.user when a valid token is present but never blocks the request.
+// Availability checks and reservation requests stay open to guests, yet a signed-in
+// customer still gets their booking tied to their account.
+export const optionalAuth = async (req, res, next) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.replace('Bearer ', '') : null;
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const user = await getUserByToken(token);
+    if (user) {
+      req.user = user;
+    }
+  } catch (error) {
+    // A stale token should not fail a public endpoint.
+  }
+
+  return next();
+};
+
 export const requireRole = (role) => (req, res, next) => {
   if (!req.user || req.user.role !== role) {
     return res.status(403).json({ message: 'You do not have permission to access this resource.' });

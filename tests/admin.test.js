@@ -78,12 +78,12 @@ test('reservation status updates are protected for staff roles', async () => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${loginPayload.token}`,
       },
-      body: JSON.stringify({ status: 'confirmed' }),
+      body: JSON.stringify({ status: 'processing' }),
     });
 
     const updatePayload = await updateResponse.json();
     assert.equal(updateResponse.status, 200);
-    assert.equal(updatePayload.booking.status, 'confirmed');
+    assert.equal(updatePayload.booking.status, 'processing');
   } finally {
     server.close();
   }

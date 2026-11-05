@@ -3,6 +3,7 @@ import {
   mockAuditLogs,
   mockBookings,
   mockInquiries,
+  mockPayments,
   mockPermissions,
   mockRoles,
   mockRooms,
@@ -27,9 +28,20 @@ const calculateNightCount = (arrival, departure) => {
 };
 
 const calculateBookingTotal = (booking) => {
-  const room = mockRooms.find((entry) => entry.id === booking.roomId || entry.name === booking.suite);
-  const nightlyRate = room?.price || 0;
+  if (Number.isFinite(booking?.totalAmount) && booking.totalAmount > 0) {
+    return booking.totalAmount;
+  }
+
   const nights = calculateNightCount(booking.arrival, booking.departure);
+  const roomIds = Array.isArray(booking?.roomIds) && booking.roomIds.length > 0
+    ? booking.roomIds
+    : [booking?.roomId].filter(Boolean);
+
+  const selectedRooms = mockRooms.filter((room) => roomIds.includes(room.id));
+  const nightlyRate = selectedRooms.length > 0
+    ? selectedRooms.reduce((sum, room) => sum + room.price, 0)
+    : mockRooms.find((room) => room.name === booking?.suite)?.price || 0;
+
   return nightlyRate * nights;
 };
 
@@ -381,19 +393,51 @@ export const getAuditLogs = (req, res) => {
 };
 
 export const listAdminBookings = (req, res) => {
+  const bookings = mockBookings.map((booking) => {
+    const totalAmount = calculateBookingTotal(booking);
+    const amountPaid = Number(booking.amountPaid || 0);
+
+    return {
+      ...booking,
+      totalAmount,
+      amountPaid,
+      balanceDue: Math.max(0, Math.round((totalAmount - amountPaid) * 100) / 100),
+      payments: mockPayments
+        .filter((payment) => payment.bookingId === booking.id)
+        .map((payment) => ({
+          paymentReference: payment.paymentReference,
+          amount: payment.amount,
+          method: payment.method,
+          paymentType: payment.paymentType,
+          status: payment.status,
+          createdAt: payment.createdAt,
+          paidAt: payment.paidAt || null,
+        })),
+    };
+  });
+
   return res.status(200).json({
     message: 'Reservation list retrieved successfully.',
-    bookings: mockBookings.map((booking) => ({ ...booking, totalAmount: calculateBookingTotal(booking) })),
+    bookings,
+  });
+};
+
+export const listAdminPayments = (req, res) => {
+  return res.status(200).json({
+    message: 'Payment records retrieved successfully.',
+    payments: [...mockPayments].sort(
+      (left, right) => new Date(right.createdAt) - new Date(left.createdAt),
+    ),
   });
 };
 
 export const updateBookingStatus = (req, res) => {
   const { id } = req.params;
   const { status } = req.body || {};
-  const allowedStatuses = ['pending', 'confirmed', 'cancelled'];
+  const allowedStatuses = ['pending', 'processing', 'approved', 'cancelled'];
 
   if (!allowedStatuses.includes(status)) {
-    return res.status(400).json({ message: 'Status must be one of pending, confirmed, or cancelled.' });
+    return res.status(400).json({ message: 'Status must be one of pending, processing, approved, or cancelled.' });
   }
 
   const booking = mockBookings.find((entry) => entry.id === id);
@@ -401,8 +445,18 @@ export const updateBookingStatus = (req, res) => {
     return res.status(404).json({ message: 'Booking not found.' });
   }
 
+  const timestamp = new Date().toISOString();
   booking.status = status;
-  booking.updatedAt = new Date().toISOString();
+  booking.updatedAt = timestamp;
+
+  if (status === 'processing') {
+    booking.confirmedAt = timestamp;
+  }
+
+  if (status === 'approved') {
+    booking.approvedAt = timestamp;
+  }
+
   createReservationNotification({ booking, status, actor: req.user?.role || 'staff' });
 
   recordAuditLog({

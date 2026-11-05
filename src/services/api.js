@@ -28,8 +28,22 @@ async function request(endpoint, options = {}, token) {
   return payload;
 }
 
-export function checkAvailability({ arrival, departure, guests, suite }) {
-  const params = new URLSearchParams({ arrival, departure, guests: String(guests || 2), type: suite || '' });
+export function checkAvailability({ arrival, departure, guests, adults, children, suite }) {
+  const params = new URLSearchParams({
+    arrival,
+    departure,
+    guests: String(guests || 2),
+    type: suite || '',
+  });
+
+  if (adults !== undefined && adults !== null && adults !== '') {
+    params.set('adults', String(adults));
+  }
+
+  if (children !== undefined && children !== null && children !== '') {
+    params.set('children', String(children));
+  }
+
   return request(`/bookings/availability?${params.toString()}`);
 }
 
@@ -38,6 +52,10 @@ export function submitBooking(payload) {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export function getBooking(bookingId, token) {
+  return request(`/bookings/${bookingId}`, {}, token);
 }
 
 export function submitInquiry(payload) {
@@ -86,6 +104,10 @@ export function getDashboardStats(token) {
 
 export function getAdminBookings(token) {
   return request('/admin/bookings', {}, token);
+}
+
+export function getAdminPayments(token) {
+  return request('/admin/payments', {}, token);
 }
 
 export function getAdminAvailability(token) {

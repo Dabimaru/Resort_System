@@ -1,7 +1,18 @@
+import { useNavigate } from 'react-router-dom';
 import { resortData } from '../data/resortData';
 
 export default function RoomShowcase() {
+  const navigate = useNavigate();
+
   const reserveRoom = (roomName) => {
+    const token = localStorage.getItem('azureCoveToken');
+
+    // Signed-in guests continue in My Bookings; guests are sent to the availability checker.
+    if (token) {
+      navigate(`/my-bookings?suite=${encodeURIComponent(roomName)}`);
+      return;
+    }
+
     localStorage.setItem('selectedSuite', roomName);
     const bookingSection = document.getElementById('booking');
     if (bookingSection) {

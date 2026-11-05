@@ -10,6 +10,7 @@ import {
   getAuditLogs,
   getDashboardMetrics,
   listAdminBookings,
+  listAdminPayments,
   listDateAvailability,
   listInquiries,
   listPermissions,
@@ -50,6 +51,7 @@ router.put('/roles/:id/permissions', requireAuth, requirePermission('roles.edit'
 router.get('/permissions', requireAuth, requirePermission('roles.view'), listPermissions);
 router.get('/bookings', requireAuth, requirePermission('bookings.view'), listAdminBookings);
 router.patch('/bookings/:id/status', requireAuth, requirePermission('bookings.confirm'), updateBookingStatus);
+router.get('/payments', requireAuth, requireAnyPermission(['bookings.view', 'reports.view']), listAdminPayments);
 router.get('/availability', requireAuth, requirePermission('bookings.view'), listDateAvailability);
 router.patch('/availability', requireAuth, requirePermission('bookings.confirm'), updateDateAvailability);
 router.get('/inquiries', requireAuth, requirePermission('inquiries.view'), listInquiries);
