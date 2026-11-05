@@ -19,6 +19,7 @@ import {
   createAdminRole,
   updateAdminAvailability,
   createAdminStaff,
+  deleteAdminBooking,
   deleteAdminRole,
   replyToAdminChatThread,
   saveRolePermissions,
@@ -54,7 +55,7 @@ const defaultPermissionState = {
 
 const statusBadgeClass = (status) => {
   switch (status) {
-    case 'approved':
+    case 'completed':
       return 'border-state-success/40 bg-state-success/10 text-state-success';
     case 'processing':
       return 'border-state-info/40 bg-state-info/10 text-state-info';
@@ -175,6 +176,15 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
       await fetchAdminState();
     } catch (err) {
       setError(err.message || 'Unable to update booking status.');
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId) => {
+    try {
+      await deleteAdminBooking(bookingId, token);
+      await fetchAdminState();
+    } catch (err) {
+      setError(err.message || 'Unable to delete the reservation.');
     }
   };
 
@@ -368,7 +378,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
     { label: 'Total bookings', value: stats?.totalBookings ?? metrics?.totalReservations ?? bookings.length },
     { label: 'Pending', value: statusCount('pending') },
     { label: 'Processing', value: statusCount('processing') },
-    { label: 'Approved', value: statusCount('approved') },
+    { label: 'Completed', value: statusCount('completed') },
     { label: 'Available rooms', value: stats?.availableRooms ?? metrics?.availableRooms ?? 0 },
     { label: 'Occupied rooms', value: stats?.occupiedRooms ?? metrics?.occupiedRooms ?? 0 },
     { label: 'Register customers', value: stats?.totalCustomers ?? 0 },
@@ -783,6 +793,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                     <div className="flex flex-wrap gap-2">
                       <button type="button" onClick={() => handleStatusUpdate(booking.id, 'processing')} className="rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-medium text-text-inverse">Approve</button>
                       <button type="button" onClick={() => handleStatusUpdate(booking.id, 'cancelled')} className="rounded-full border border-state-error/40 bg-state-error/10 px-3 py-1.5 text-xs text-state-error hover:bg-state-error/20">Cancel</button>
+                      <button type="button" onClick={() => handleDeleteBooking(booking.id)} className="rounded-full border border-state-error/40 bg-state-error/10 px-3 py-1.5 text-xs text-state-error hover:bg-state-error/20">Delete</button>
                     </div>
                   </td>
                 </tr>

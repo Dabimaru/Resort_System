@@ -47,11 +47,13 @@ export function checkAvailability({ arrival, departure, guests, adults, children
   return request(`/bookings/availability?${params.toString()}`);
 }
 
-export function submitBooking(payload) {
+// The token matters here: the server records which account owns the
+// reservation, and My Bookings filters on exactly that.
+export function submitBooking(payload, token) {
   return request('/bookings', {
     method: 'POST',
     body: JSON.stringify(payload),
-  });
+  }, token);
 }
 
 export function getBooking(bookingId, token) {
@@ -125,6 +127,12 @@ export function updateBookingStatus(bookingId, status, token) {
   return request(`/admin/bookings/${bookingId}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
+  }, token);
+}
+
+export function deleteAdminBooking(bookingId, token) {
+  return request(`/admin/bookings/${bookingId}`, {
+    method: 'DELETE',
   }, token);
 }
 

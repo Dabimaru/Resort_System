@@ -1,9 +1,7 @@
 import crypto from 'crypto';
 import {
   mockAuditLogs,
-  mockBookings,
   mockInquiries,
-  mockPayments,
   mockPermissions,
   mockRoles,
   mockRooms,
@@ -19,6 +17,13 @@ import {
 } from '../data/mockStore.js';
 import { createReservationNotification } from '../services/notificationService.js';
 import { loginAdminUser, getUserByToken } from '../services/authService.js';
+import {
+  deleteBooking as deleteBookingRecord,
+  findBooking as findBookingRecord,
+  listBookings as listBookingRecords,
+  listPayments as listPaymentRecords,
+  updateBooking as updateBookingRecord,
+} from '../services/supabaseRepository.js';
 
 const calculateNightCount = (arrival, departure) => {
   const start = new Date(arrival);
@@ -59,15 +64,18 @@ const normalizeStaffUser = (user) => ({
   lastLoginAt: user.lastLoginAt || null,
 });
 
-export const getDashboardMetrics = (req, res) => {
-  const totalReservations = mockBookings.length;
-  const pendingReservations = mockBookings.filter((booking) => booking.status === 'pending').length;
-  const confirmedReservations = mockBookings.filter((booking) => booking.status === 'confirmed').length;
+export const getDashboardMetrics = async (req, res) => {
+  const bookings = await listBookingRecords();
+  const totalReservations = bookings.length;
+  const pendingReservations = bookings.filter((booking) => booking.status === 'pending').length;
+  const processingReservations = bookings.filter((booking) => booking.status === 'processing').length;
+  const completedReservations = bookings.filter((booking) => booking.status === 'completed').length;
   const availableRooms = mockRooms.filter((room) => room.status === 'available').length;
-  const occupiedRooms = mockRooms.filter((room) => room.status === 'occupied').length || Math.max(0, confirmedReservations);
-  const totalRevenue = mockBookings.reduce((sum, booking) => sum + calculateBookingTotal(booking), 0);
+  const occupiedRooms = processingReservations + completedReservations;
+  // Revenue reflects money actually collected, never an unpaid reservation.
+  const totalRevenue = bookings.reduce((sum, booking) => sum + Number(booking.amountPaid || 0), 0);
   const occupancyRate = mockRooms.length ? (occupiedRooms / mockRooms.length) * 100 : 0;
-  const recentBookings = [...mockBookings]
+  const recentBookings = [...bookings]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 5)
     .map((booking) => ({
@@ -85,7 +93,9 @@ export const getDashboardMetrics = (req, res) => {
     metrics: {
       totalReservations,
       pendingReservations,
-      confirmedReservations,
+      processingReservations,
+      completedReservations,
+      confirmedReservations: processingReservations + completedReservations,
       availableRooms,
       occupiedRooms,
       totalRevenue,
@@ -373,15 +383,22 @@ export const saveRolePermissions = (req, res) => {
   return res.status(200).json({ message: 'Role permissions updated successfully.', role });
 };
 
-export const getAdminDashboardStats = (req, res) => {
+export const getAdminDashboardStats = async (req, res) => {
+  const bookings = await listBookingRecords();
+  const processing = bookings.filter((booking) => booking.status === 'processing').length;
+  const completed = bookings.filter((booking) => booking.status === 'completed').length;
+
   const stats = {
-    totalBookings: mockBookings.length,
-    pendingReservations: mockBookings.filter((booking) => booking.status === 'pending').length,
-    confirmedReservations: mockBookings.filter((booking) => booking.status === 'confirmed').length,
+    totalBookings: bookings.length,
+    pendingReservations: bookings.filter((booking) => booking.status === 'pending').length,
+    processingReservations: processing,
+    completedReservations: completed,
+    confirmedReservations: processing + completed,
+    totalRevenue: bookings.reduce((sum, booking) => sum + Number(booking.amountPaid || 0), 0),
     totalRooms: mockRooms.length,
     availableRooms: mockRooms.filter((room) => room.status === 'available').length,
     occupiedRooms: mockRooms.filter((room) => room.status === 'occupied').length,
-    totalCustomers: new Set(mockBookings.map((booking) => booking.guestEmail || booking.guestName)).size,
+    totalCustomers: new Set(bookings.map((booking) => booking.userId || booking.guestEmail || booking.guestName)).size,
     activeStaff: mockUsers.filter((user) => user.isStaff && user.isActive !== false).length,
   };
 
@@ -392,8 +409,10 @@ export const getAuditLogs = (req, res) => {
   return res.status(200).json({ message: 'Audit logs retrieved successfully.', logs: mockAuditLogs.slice(0, 30) });
 };
 
-export const listAdminBookings = (req, res) => {
-  const bookings = mockBookings.map((booking) => {
+export const listAdminBookings = async (req, res) => {
+  const [bookings, payments] = await Promise.all([listBookingRecords(), listPaymentRecords()]);
+
+  const enriched = bookings.map((booking) => {
     const totalAmount = calculateBookingTotal(booking);
     const amountPaid = Number(booking.amountPaid || 0);
 
@@ -402,7 +421,7 @@ export const listAdminBookings = (req, res) => {
       totalAmount,
       amountPaid,
       balanceDue: Math.max(0, Math.round((totalAmount - amountPaid) * 100) / 100),
-      payments: mockPayments
+      payments: payments
         .filter((payment) => payment.bookingId === booking.id)
         .map((payment) => ({
           paymentReference: payment.paymentReference,
@@ -418,45 +437,68 @@ export const listAdminBookings = (req, res) => {
 
   return res.status(200).json({
     message: 'Reservation list retrieved successfully.',
-    bookings,
+    bookings: enriched,
   });
 };
 
-export const listAdminPayments = (req, res) => {
+export const listAdminPayments = async (req, res) => {
+  const payments = await listPaymentRecords();
+
   return res.status(200).json({
     message: 'Payment records retrieved successfully.',
-    payments: [...mockPayments].sort(
+    payments: [...payments].sort(
       (left, right) => new Date(right.createdAt) - new Date(left.createdAt),
     ),
   });
 };
 
-export const updateBookingStatus = (req, res) => {
+export const deleteBookingController = async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body || {};
-  const allowedStatuses = ['pending', 'processing', 'approved', 'cancelled'];
+  const booking = await findBookingRecord(id);
 
-  if (!allowedStatuses.includes(status)) {
-    return res.status(400).json({ message: 'Status must be one of pending, processing, approved, or cancelled.' });
-  }
-
-  const booking = mockBookings.find((entry) => entry.id === id);
   if (!booking) {
     return res.status(404).json({ message: 'Booking not found.' });
   }
 
+  await deleteBookingRecord(booking.id);
+
+  recordAuditLog({
+    actorId: req.user?.id,
+    actorName: req.user?.name || 'System',
+    action: 'booking.delete',
+    resource: 'reservation',
+    metadata: { bookingId: booking.id, bookingReference: booking.bookingReference },
+  });
+
+  return res.status(200).json({ message: 'Reservation deleted successfully.' });
+};
+
+export const updateBookingStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body || {};
+  const allowedStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({ message: 'Status must be one of pending, processing, completed, or cancelled.' });
+  }
+
+  const existing = await findBookingRecord(id);
+  if (!existing) {
+    return res.status(404).json({ message: 'Booking not found.' });
+  }
+
   const timestamp = new Date().toISOString();
-  booking.status = status;
-  booking.updatedAt = timestamp;
+  const patch = { status, updatedAt: timestamp };
 
   if (status === 'processing') {
-    booking.confirmedAt = timestamp;
+    patch.approvedAt = timestamp;
   }
 
-  if (status === 'approved') {
-    booking.approvedAt = timestamp;
+  if (status === 'completed') {
+    patch.completedAt = timestamp;
   }
 
+  const booking = await updateBookingRecord(existing.id, patch);
   createReservationNotification({ booking, status, actor: req.user?.role || 'staff' });
 
   recordAuditLog({

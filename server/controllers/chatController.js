@@ -1,65 +1,49 @@
-import crypto from 'crypto';
-import { mockChatThreads } from '../data/mockStore.js';
+import {
+  appendMessage,
+  ensureThreadForCustomer,
+  getThreadById,
+  getThreadForCustomer,
+  listThreads,
+} from '../services/chatRepository.js';
 
-const generateTicketNumber = () => `TKT-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-
-const sanitizeThread = (thread) => ({
-  id: thread.id,
-  ticketNumber: thread.ticketNumber,
-  customerId: thread.customerId,
-  customerName: thread.customerName,
-  customerEmail: thread.customerEmail,
-  status: thread.status,
-  createdAt: thread.createdAt,
-  updatedAt: thread.updatedAt,
-  messages: (thread.messages || []).map((message) => ({
-    id: message.id,
-    sender: message.sender,
-    senderName: message.senderName,
-    text: message.text,
-    createdAt: message.createdAt,
-  })),
-});
-
-const getThreadForCustomer = (customerId) =>
-  mockChatThreads.find((thread) => thread.customerId === customerId) || null;
-
-export const getCustomerChatThread = (req, res) => {
+export const getCustomerChatThread = async (req, res) => {
   const customer = req.user;
-  const thread = getThreadForCustomer(customer.id);
+  const thread = await getThreadForCustomer(customer.id);
 
-  if (!thread) {
+  if (thread) {
     return res.status(200).json({
-      message: 'No active chat thread yet.',
-      thread: {
-        id: null,
-        ticketNumber: null,
-        customerId: customer.id,
-        customerName: customer.name,
-        customerEmail: customer.email,
-        status: 'new',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        messages: [
-          {
-            id: crypto.randomUUID(),
-            sender: 'support',
-            senderName: 'Azure Cove Concierge',
-            text: 'Hello! Welcome to Azure Cove. How can we help today?',
-            createdAt: new Date().toISOString(),
-          },
-        ],
-      },
+      message: 'Customer chat thread retrieved successfully.',
+      thread,
     });
   }
 
+  // No conversation yet. Return the greeting without persisting anything so the
+  // admin queue only lists guests who actually wrote in.
   return res.status(200).json({
-    message: 'Customer chat thread retrieved successfully.',
-    thread: sanitizeThread(thread),
+    message: 'No active chat thread yet.',
+    thread: {
+      id: null,
+      ticketNumber: null,
+      customerId: customer.id,
+      customerName: customer.name,
+      customerEmail: customer.email,
+      status: 'new',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: [
+        {
+          id: 'greeting',
+          sender: 'support',
+          senderName: 'Azure Cove Concierge',
+          text: 'Hello! Welcome to Azure Cove. How can we help today?',
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    },
   });
 };
 
-export const sendCustomerMessage = (req, res) => {
+export const sendCustomerMessage = async (req, res) => {
   const customer = req.user;
   const messageText = String(req.body?.message || '').trim();
 
@@ -67,60 +51,40 @@ export const sendCustomerMessage = (req, res) => {
     return res.status(400).json({ message: 'A message is required before sending.' });
   }
 
-  let thread = getThreadForCustomer(customer.id);
-
-  if (!thread) {
-    thread = {
-      id: crypto.randomUUID(),
-      ticketNumber: generateTicketNumber(),
+  try {
+    const thread = await ensureThreadForCustomer({
       customerId: customer.id,
       customerName: customer.name,
       customerEmail: customer.email,
-      status: 'open',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      messages: [
-        {
-          id: crypto.randomUUID(),
-          sender: 'support',
-          senderName: 'Azure Cove Concierge',
-          text: 'Hello! Welcome to Azure Cove. We can help with reservations, room availability, and resort information.',
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    };
-    mockChatThreads.push(thread);
+    });
+
+    await appendMessage(thread.id, {
+      sender: 'customer',
+      senderName: customer.name,
+      text: messageText,
+    });
+
+    const refreshed = await getThreadById(thread.id);
+
+    return res.status(200).json({
+      message: 'Message sent successfully.',
+      thread: refreshed,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({ message: error.message || 'Unable to send the message.' });
   }
-
-  const customerMessage = {
-    id: crypto.randomUUID(),
-    sender: 'customer',
-    senderName: customer.name,
-    text: messageText,
-    createdAt: new Date().toISOString(),
-  };
-
-  thread.messages.push(customerMessage);
-  thread.updatedAt = new Date().toISOString();
-
-  return res.status(200).json({
-    message: 'Message sent successfully.',
-    thread: sanitizeThread(thread),
-  });
 };
 
-export const listChatThreads = (req, res) => {
-  const sortedThreads = [...mockChatThreads]
-    .sort((left, right) => new Date(right.updatedAt) - new Date(left.updatedAt))
-    .map(sanitizeThread);
+export const listChatThreads = async (req, res) => {
+  const threads = await listThreads();
 
   return res.status(200).json({
     message: 'Support threads retrieved successfully.',
-    threads: sortedThreads,
+    threads,
   });
 };
 
-export const replyToChatThread = (req, res) => {
+export const replyToChatThread = async (req, res) => {
   const { id } = req.params;
   const adminReply = String(req.body?.message || '').trim();
 
@@ -128,22 +92,25 @@ export const replyToChatThread = (req, res) => {
     return res.status(400).json({ message: 'A reply message is required.' });
   }
 
-  const thread = mockChatThreads.find((entry) => entry.id === id);
+  const thread = await getThreadById(id);
   if (!thread) {
     return res.status(404).json({ message: 'Support thread not found.' });
   }
 
-  thread.messages.push({
-    id: crypto.randomUUID(),
-    sender: 'admin',
-    senderName: req.user?.name || 'Resort Support',
-    text: adminReply,
-    createdAt: new Date().toISOString(),
-  });
-  thread.updatedAt = new Date().toISOString();
+  try {
+    await appendMessage(id, {
+      sender: 'admin',
+      senderName: req.user?.name || 'Resort Support',
+      text: adminReply,
+    });
 
-  return res.status(200).json({
-    message: 'Reply sent successfully.',
-    thread: sanitizeThread(thread),
-  });
+    const refreshed = await getThreadById(id);
+
+    return res.status(200).json({
+      message: 'Reply sent successfully.',
+      thread: refreshed,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({ message: error.message || 'Unable to send the reply.' });
+  }
 };

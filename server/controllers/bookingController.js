@@ -1,10 +1,12 @@
-import { getDateRangeAvailability, mockBookings } from '../data/mockStore.js';
+import { getDateRangeAvailability } from '../data/mockStore.js';
 import {
   MAX_GUESTS,
   buildBookingRecord,
   calculateNights,
   getAvailableRooms,
+  notifyReservationCreated,
 } from '../services/bookingService.js';
+import { createBooking, findBooking, listBookings } from '../services/supabaseRepository.js';
 
 const isValidDateString = (value) => !Number.isNaN(Date.parse(value));
 
@@ -18,14 +20,12 @@ const parseGuestCounts = ({ adults, children, guests }) => {
   };
 };
 
-export const listBookings = (req, res) => {
-  res.json({
-    message: 'Booking routes ready',
-    bookings: mockBookings,
-  });
+export const listBookingsController = async (req, res) => {
+  const bookings = await listBookings();
+  res.json({ message: 'Booking routes ready', bookings });
 };
 
-export const checkAvailability = (req, res) => {
+export const checkAvailability = async (req, res) => {
   const { arrival, departure, type } = req.query || {};
   const { adults, children } = parseGuestCounts(req.query || {});
   const totalGuests = adults + children;
@@ -66,7 +66,7 @@ export const checkAvailability = (req, res) => {
     });
   }
 
-  const availableRooms = getAvailableRooms({ arrival, departure, guests: totalGuests, type });
+  const availableRooms = await getAvailableRooms({ arrival, departure, guests: totalGuests, type });
 
   return res.status(200).json({
     message: availableRooms.length > 0
@@ -85,7 +85,7 @@ export const checkAvailability = (req, res) => {
   });
 };
 
-export const createBooking = (req, res) => {
+export const createBookingController = async (req, res) => {
   const { arrival, departure, suite, rooms: requestedRooms, guestName, guestEmail, adults, children } = req.body || {};
 
   if (!arrival || !departure) {
@@ -116,7 +116,7 @@ export const createBooking = (req, res) => {
 
   try {
     const user = req.user || null;
-    const booking = buildBookingRecord({
+    const record = await buildBookingRecord({
       arrival,
       departure,
       adults: counts.adults,
@@ -127,24 +127,34 @@ export const createBooking = (req, res) => {
       guestEmail: guestEmail || user?.email || '',
     });
 
+    const saved = await createBooking(record);
+    notifyReservationCreated(saved, user ? 'guest' : 'system');
+
     return res.status(201).json({
       message: 'Booking request received successfully.',
-      data: booking,
+      data: saved,
     });
   } catch (error) {
     return res.status(error.status || 500).json({ message: error.message || 'Unable to process booking.' });
   }
 };
 
-export const getUserBookings = (req, res) => {
-  const userId = req.user?.id;
+export const getUserBookings = async (req, res) => {
+  const user = req.user;
 
-  if (!userId) {
+  if (!user?.id) {
     return res.status(401).json({ message: 'Authentication required.' });
   }
 
-  const userBookings = mockBookings
-    .filter((booking) => booking.userId === userId)
+  const all = await listBookings();
+
+  // Older reservations may predate the account link, so fall back to the email
+  // the guest registered with rather than hiding their own booking from them.
+  const userBookings = all
+    .filter((booking) => (
+      booking.userId === user.id
+      || (!!user.email && booking.guestEmail && booking.guestEmail.toLowerCase() === user.email.toLowerCase())
+    ))
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   return res.status(200).json({
@@ -153,10 +163,8 @@ export const getUserBookings = (req, res) => {
   });
 };
 
-export const getBookingById = (req, res) => {
-  const booking = mockBookings.find(
-    (entry) => entry.id === req.params.id || entry.bookingReference === req.params.id,
-  );
+export const getBookingById = async (req, res) => {
+  const booking = await findBooking(req.params.id);
 
   if (!booking) {
     return res.status(404).json({ message: 'Reservation not found.' });

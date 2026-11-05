@@ -213,3 +213,133 @@ values
   ('64ac40db-cbd2-4051-a2aa-9c9776e8fee3', 'Cashier', 'Payments and reporting', false),
   ('5d2c41ce-30ec-48ae-a7ff-aa27f8b410b7', 'Housekeeping', 'Room availability updates', false)
 on conflict (name) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Reservation persistence
+-- The original bookings table only carried the basic stay details. Extend it so
+-- a reservation keeps its reference, party breakdown, chosen rooms, totals and
+-- payment state for the life of the account.
+-- ---------------------------------------------------------------------------
+
+alter table bookings add column if not exists user_id text;
+alter table bookings add column if not exists booking_reference text;
+alter table bookings add column if not exists adults integer not null default 2;
+alter table bookings add column if not exists children integer not null default 0;
+alter table bookings add column if not exists nights integer not null default 1;
+alter table bookings add column if not exists room_ids jsonb not null default '[]'::jsonb;
+alter table bookings add column if not exists rooms jsonb not null default '[]'::jsonb;
+alter table bookings add column if not exists total_amount numeric(12,2) not null default 0;
+alter table bookings add column if not exists amount_paid numeric(12,2) not null default 0;
+alter table bookings add column if not exists payment_status text not null default 'unpaid';
+alter table bookings add column if not exists payment_type text;
+alter table bookings add column if not exists payment_reference text;
+alter table bookings add column if not exists payments jsonb not null default '[]'::jsonb;
+alter table bookings add column if not exists updated_at timestamptz not null default now();
+alter table bookings add column if not exists approved_at timestamptz;
+alter table bookings add column if not exists completed_at timestamptz;
+
+create unique index if not exists idx_bookings_reference on bookings(booking_reference);
+create index if not exists idx_bookings_user_id on bookings(user_id);
+create index if not exists idx_bookings_status on bookings(status);
+
+-- ---------------------------------------------------------------------------
+-- Payments
+-- ---------------------------------------------------------------------------
+
+create table if not exists payments (
+  id uuid primary key default uuid_generate_v4(),
+  booking_id uuid,
+  booking_reference text,
+  payment_reference text not null unique,
+  amount numeric(12,2) not null default 0,
+  payment_type text not null default 'downpayment',
+  method text not null default 'cash',
+  status text not null default 'pending',
+  customer_email text,
+  guest_name text,
+  verification_code text,
+  created_at timestamptz not null default now(),
+  paid_at timestamptz
+);
+
+create index if not exists idx_payments_booking on payments(booking_id);
+create index if not exists idx_payments_status on payments(status);
+
+alter table payments enable row level security;
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'payments' and policyname = 'payments_public_access') then
+    create policy payments_public_access on payments for all using (true) with check (true);
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- Support chat
+-- ---------------------------------------------------------------------------
+
+create table if not exists chat_threads (
+  id uuid primary key default uuid_generate_v4(),
+  ticket_number text,
+  customer_id text not null unique,
+  customer_name text not null,
+  customer_email text not null,
+  status text not null default 'open',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists chat_messages (
+  id uuid primary key default uuid_generate_v4(),
+  thread_id uuid not null references chat_threads(id) on delete cascade,
+  sender text not null,
+  sender_name text,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_chat_threads_customer on chat_threads(customer_id);
+create index if not exists idx_chat_messages_thread on chat_messages(thread_id);
+
+alter table chat_threads enable row level security;
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'chat_threads' and policyname = 'chat_threads_public_access') then
+    create policy chat_threads_public_access on chat_threads for all using (true) with check (true);
+  end if;
+end $$;
+
+alter table chat_messages enable row level security;
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'chat_messages' and policyname = 'chat_messages_public_access') then
+    create policy chat_messages_public_access on chat_messages for all using (true) with check (true);
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- Room catalogue details
+-- The properties table only stored pricing and status. Capacity, amenities and
+-- imagery drive availability and the booking flow, so keep them with the room.
+-- ---------------------------------------------------------------------------
+
+alter table properties add column if not exists capacity integer not null default 2;
+alter table properties add column if not exists amenities jsonb not null default '[]'::jsonb;
+alter table properties add column if not exists image text;
+
+update properties set capacity = 2, type = 'suite' where name = 'Laguna Suite';
+update properties set capacity = 4, type = 'villa' where name = 'Palm Courtyard Villa';
+update properties set capacity = 2, type = 'room' where name = 'Coral Horizon Room';
+
+update properties set amenities = '["Ocean view","Private terrace","Breakfast included"]'::jsonb
+  where name = 'Laguna Suite' and (amenities is null or amenities = '[]'::jsonb);
+update properties set amenities = '["Private pool","Two bedrooms","Garden dining"]'::jsonb
+  where name = 'Palm Courtyard Villa' and (amenities is null or amenities = '[]'::jsonb);
+update properties set amenities = '["Balcony","Beach access","Sunrise coffee setup"]'::jsonb
+  where name = 'Coral Horizon Room' and (amenities is null or amenities = '[]'::jsonb);
+
+update properties set image = 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80'
+  where name = 'Laguna Suite' and image is null;
+update properties set image = 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80'
+  where name = 'Palm Courtyard Villa' and image is null;
+update properties set image = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=900&q=80'
+  where name = 'Coral Horizon Room' and image is null;

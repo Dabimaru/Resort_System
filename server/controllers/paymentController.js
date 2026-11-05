@@ -1,15 +1,21 @@
-import { listPayments, processReservationPayment, verifyReservationPayment } from '../services/paymentService.js';
+import {
+  getPayments,
+  processReservationPayment,
+  verifyReservationPayment,
+} from '../services/paymentService.js';
 
-export const listPaymentsController = (req, res) => {
+export const listPaymentsController = async (req, res) => {
+  const payments = await getPayments();
+
   res.status(200).json({
     message: 'Payments retrieved successfully.',
-    payments: listPayments(),
+    payments,
   });
 };
 
-export const processPaymentController = (req, res) => {
+export const processPaymentController = async (req, res) => {
   try {
-    const payment = processReservationPayment(req.body || {});
+    const payment = await processReservationPayment(req.body || {});
     return res.status(201).json({
       message: 'Payment initiated successfully.',
       payment,
@@ -19,9 +25,9 @@ export const processPaymentController = (req, res) => {
   }
 };
 
-export const verifyPaymentController = (req, res) => {
+export const verifyPaymentController = async (req, res) => {
   try {
-    const payment = verifyReservationPayment(req.body || {});
+    const payment = await verifyReservationPayment(req.body || {});
     return res.status(200).json({
       message: 'Payment verified successfully.',
       payment,
