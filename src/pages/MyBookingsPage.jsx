@@ -14,7 +14,7 @@ const range = (start, end) => Array.from({ length: end - start + 1 }, (_, index)
 const statusMeta = {
   pending: { label: 'Pending', hint: 'Waiting for confirmation from our team.', className: 'badge badge-warning' },
   processing: { label: 'Processing', hint: 'Confirmed. Complete your payment to lock it in.', className: 'badge badge-primary' },
-  completed: { label: 'Completed', hint: 'Payment received. Your stay is secured.', className: 'badge badge-success' },
+  approved: { label: 'Approved', hint: 'Payment received. Your stay is secured.', className: 'badge badge-success' },
   cancelled: { label: 'Cancelled', hint: 'This reservation was cancelled.', className: 'badge badge-error' },
 };
 

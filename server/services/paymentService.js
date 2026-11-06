@@ -68,7 +68,7 @@ export const processReservationPayment = async ({
     throw error;
   }
 
-  if (booking?.status === 'completed') {
+  if (booking?.status === 'approved') {
     const error = new Error('This reservation has already been settled.');
     error.status = 409;
     throw error;
@@ -130,7 +130,7 @@ export const verifyReservationPayment = async ({ paymentId, verificationCode, ac
   const timestamp = new Date().toISOString();
   const settled = await markPaymentPaid(payment.id, timestamp);
 
-  // Settling the payment is what moves a reservation from Processing to Completed.
+  // Settling the payment is what moves a reservation from Processing to Approved.
   const booking = await resolveBooking(payment.bookingId);
 
   if (booking && booking.status !== 'cancelled') {
@@ -145,7 +145,7 @@ export const verifyReservationPayment = async ({ paymentId, verificationCode, ac
     };
 
     const updatedBooking = await updateBooking(booking.id, {
-      status: 'completed',
+      status: 'approved',
       paymentStatus: payment.paymentType === 'full' ? 'paid' : 'partial',
       paymentType: payment.paymentType,
       paymentReference: payment.paymentReference,
@@ -170,7 +170,7 @@ export const verifyReservationPayment = async ({ paymentId, verificationCode, ac
       },
     });
 
-    createReservationNotification({ booking: updatedBooking || booking, status: 'completed', actor });
+    createReservationNotification({ booking: updatedBooking || booking, status: 'approved', actor });
   }
 
   return settled || payment;

@@ -12,8 +12,8 @@ import {
   hashPassword,
   ensureDefaultAdmin,
   calendarAvailability,
-  getDateAvailability,
   setDateAvailability,
+  authTokens,
 } from '../data/mockStore.js';
 import { createReservationNotification } from '../services/notificationService.js';
 import { loginAdminUser, getUserByToken } from '../services/authService.js';
@@ -22,8 +22,10 @@ import {
   findBooking as findBookingRecord,
   listBookings as listBookingRecords,
   listPayments as listPaymentRecords,
+  readProperties,
   updateBooking as updateBookingRecord,
 } from '../services/supabaseRepository.js';
+import { bookingRoomIds } from '../services/bookingService.js';
 
 const calculateNightCount = (arrival, departure) => {
   const start = new Date(arrival);
@@ -50,6 +52,23 @@ const calculateBookingTotal = (booking) => {
   return nightlyRate * nights;
 };
 
+// A room counts as occupied while a reservation holds it and has not been
+// cancelled. Counting reservations instead would double-count multi-room stays
+// and could push occupancy above 100%.
+const ACTIVE_RESERVATION_STATUSES = ['processing', 'approved'];
+
+const countOccupiedRooms = (bookings) => {
+  const occupied = new Set();
+
+  bookings
+    .filter((booking) => ACTIVE_RESERVATION_STATUSES.includes(booking.status))
+    .forEach((booking) => {
+      bookingRoomIds(booking).forEach((roomId) => occupied.add(roomId));
+    });
+
+  return occupied.size;
+};
+
 const normalizeStaffUser = (user) => ({
   id: user.id,
   fullName: user.name,
@@ -65,16 +84,16 @@ const normalizeStaffUser = (user) => ({
 });
 
 export const getDashboardMetrics = async (req, res) => {
-  const bookings = await listBookingRecords();
+  const [bookings, rooms] = await Promise.all([listBookingRecords(), readProperties()]);
   const totalReservations = bookings.length;
   const pendingReservations = bookings.filter((booking) => booking.status === 'pending').length;
   const processingReservations = bookings.filter((booking) => booking.status === 'processing').length;
-  const completedReservations = bookings.filter((booking) => booking.status === 'completed').length;
-  const availableRooms = mockRooms.filter((room) => room.status === 'available').length;
-  const occupiedRooms = processingReservations + completedReservations;
+  const approvedReservations = bookings.filter((booking) => booking.status === 'approved').length;
+  const availableRooms = rooms.filter((room) => room.status === 'available').length;
+  const occupiedRooms = countOccupiedRooms(bookings);
   // Revenue reflects money actually collected, never an unpaid reservation.
   const totalRevenue = bookings.reduce((sum, booking) => sum + Number(booking.amountPaid || 0), 0);
-  const occupancyRate = mockRooms.length ? (occupiedRooms / mockRooms.length) * 100 : 0;
+  const occupancyRate = rooms.length ? Math.min(100, (occupiedRooms / rooms.length) * 100) : 0;
   const recentBookings = [...bookings]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 5)
@@ -94,8 +113,8 @@ export const getDashboardMetrics = async (req, res) => {
       totalReservations,
       pendingReservations,
       processingReservations,
-      completedReservations,
-      confirmedReservations: processingReservations + completedReservations,
+      approvedReservations,
+      confirmedReservations: processingReservations + approvedReservations,
       availableRooms,
       occupiedRooms,
       totalRevenue,
@@ -131,12 +150,10 @@ export const adminMeController = async (req, res) => {
 
 export const adminLogoutController = (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
+
+  // Drop the bearer token so a captured value cannot be replayed after logout.
   if (token) {
-    // local auth token map is intentionally short-lived, so invalidating this is straightforward
-    const userId = token;
-    if (userId) {
-      // no-op: the token can remain in-memory until expiry, but the client removes it on logout
-    }
+    authTokens.delete(token);
   }
 
   return res.status(200).json({ message: 'Logged out successfully.' });
@@ -384,20 +401,20 @@ export const saveRolePermissions = (req, res) => {
 };
 
 export const getAdminDashboardStats = async (req, res) => {
-  const bookings = await listBookingRecords();
+  const [bookings, rooms] = await Promise.all([listBookingRecords(), readProperties()]);
   const processing = bookings.filter((booking) => booking.status === 'processing').length;
-  const completed = bookings.filter((booking) => booking.status === 'completed').length;
+  const approved = bookings.filter((booking) => booking.status === 'approved').length;
 
   const stats = {
     totalBookings: bookings.length,
     pendingReservations: bookings.filter((booking) => booking.status === 'pending').length,
     processingReservations: processing,
-    completedReservations: completed,
-    confirmedReservations: processing + completed,
+    approvedReservations: approved,
+    confirmedReservations: processing + approved,
     totalRevenue: bookings.reduce((sum, booking) => sum + Number(booking.amountPaid || 0), 0),
-    totalRooms: mockRooms.length,
-    availableRooms: mockRooms.filter((room) => room.status === 'available').length,
-    occupiedRooms: mockRooms.filter((room) => room.status === 'occupied').length,
+    totalRooms: rooms.length,
+    availableRooms: rooms.filter((room) => room.status === 'available').length,
+    occupiedRooms: countOccupiedRooms(bookings),
     totalCustomers: new Set(bookings.map((booking) => booking.userId || booking.guestEmail || booking.guestName)).size,
     activeStaff: mockUsers.filter((user) => user.isStaff && user.isActive !== false).length,
   };
@@ -476,10 +493,10 @@ export const deleteBookingController = async (req, res) => {
 export const updateBookingStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body || {};
-  const allowedStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+  const allowedStatuses = ['pending', 'processing', 'approved', 'cancelled'];
 
   if (!allowedStatuses.includes(status)) {
-    return res.status(400).json({ message: 'Status must be one of pending, processing, completed, or cancelled.' });
+    return res.status(400).json({ message: 'Status must be one of pending, processing, approved, or cancelled.' });
   }
 
   const existing = await findBookingRecord(id);
@@ -494,7 +511,7 @@ export const updateBookingStatus = async (req, res) => {
     patch.approvedAt = timestamp;
   }
 
-  if (status === 'completed') {
+  if (status === 'approved') {
     patch.completedAt = timestamp;
   }
 

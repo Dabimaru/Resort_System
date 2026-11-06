@@ -55,7 +55,7 @@ const defaultPermissionState = {
 
 const statusBadgeClass = (status) => {
   switch (status) {
-    case 'completed':
+    case 'approved':
       return 'border-state-success/40 bg-state-success/10 text-state-success';
     case 'processing':
       return 'border-state-info/40 bg-state-info/10 text-state-info';
@@ -378,7 +378,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
     { label: 'Total bookings', value: stats?.totalBookings ?? metrics?.totalReservations ?? bookings.length },
     { label: 'Pending', value: statusCount('pending') },
     { label: 'Processing', value: statusCount('processing') },
-    { label: 'Completed', value: statusCount('completed') },
+    { label: 'Approved', value: statusCount('approved') },
     { label: 'Available rooms', value: stats?.availableRooms ?? metrics?.availableRooms ?? 0 },
     { label: 'Occupied rooms', value: stats?.occupiedRooms ?? metrics?.occupiedRooms ?? 0 },
     { label: 'Register customers', value: stats?.totalCustomers ?? 0 },
@@ -853,19 +853,13 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
     <div className="card-surface-elevated p-6">
       <h2 className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Room inventory</h2>
       <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {bookings.length === 0 ? (
-          <p className="text-text-muted dark:text-dark-text-muted">No room inventory found.</p>
-        ) : (
-          <>
-            {['Laguna Suite', 'Palm Courtyard Villa', 'Coral Horizon Room'].map((roomName, index) => (
-              <div key={roomName} className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
-                <p className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{roomName}</p>
-                <p className="mt-2 text-sm text-text-secondary dark:text-dark-text-secondary">Status: {index === 0 ? 'Available' : 'Ready'} </p>
-                <p className="mt-1 text-sm text-text-muted dark:text-dark-text-muted">Capacity: {index === 1 ? '4 guests' : '2 guests'}</p>
-              </div>
-            ))}
-          </>
-        )}
+        {['Laguna Suite', 'Palm Courtyard Villa', 'Coral Horizon Room'].map((roomName, index) => (
+          <div key={roomName} className="rounded-2xl border border-border bg-surface p-4 dark:border-dark-border dark:bg-dark-surface">
+            <p className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">{roomName}</p>
+            <p className="mt-2 text-sm text-text-secondary dark:text-dark-text-secondary">Status: {index === 0 ? 'Available' : 'Ready'} </p>
+            <p className="mt-1 text-sm text-text-muted dark:text-dark-text-muted">Capacity: {index === 1 ? '4 guests' : '2 guests'}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

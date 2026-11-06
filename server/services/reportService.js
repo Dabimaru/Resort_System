@@ -38,7 +38,7 @@ export const buildReportSummary = async ({ startDate = null, endDate = null } = 
     return created >= startMs && created <= endMs;
   });
 
-  const settled = filtered.filter((booking) => booking.status === 'completed');
+  const settled = filtered.filter((booking) => booking.status === 'approved');
   const processing = filtered.filter((booking) => booking.status === 'processing');
 
   // Revenue counts only money actually collected from guests.
@@ -48,7 +48,7 @@ export const buildReportSummary = async ({ startDate = null, endDate = null } = 
     totalReservations: filtered.length,
     confirmedReservations: processing.length + settled.length,
     processingReservations: processing.length,
-    completedReservations: settled.length,
+    approvedReservations: settled.length,
     cancelledReservations: filtered.filter((booking) => booking.status === 'cancelled').length,
     totalRevenue,
     expectedRevenue: filtered.reduce((sum, booking) => sum + invoiceTotal(booking), 0),

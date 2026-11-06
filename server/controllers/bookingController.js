@@ -170,6 +170,21 @@ export const getBookingById = async (req, res) => {
     return res.status(404).json({ message: 'Reservation not found.' });
   }
 
+  // A reservation is only readable by the guest who owns it or by resort staff.
+  const user = req.user || null;
+  const email = String(user?.email || '').toLowerCase();
+  const isOwner = Boolean(user) && (
+    booking.userId === user.id
+    || (!!email && String(booking.guestEmail || '').toLowerCase() === email)
+  );
+  const isStaff = Boolean(user) && (
+    Boolean(user.isStaff) || user.role === 'admin' || user.role === 'frontdesk'
+  );
+
+  if (!isOwner && !isStaff) {
+    return res.status(403).json({ message: 'You do not have permission to view this reservation.' });
+  }
+
   return res.status(200).json({
     message: 'Reservation retrieved successfully.',
     booking,

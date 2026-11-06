@@ -63,7 +63,7 @@ export default function CheckoutPage() {
         // approved and awaiting payment, then the most recent reservation.
         const initial = (urlBookingId && list.some((entry) => entry.id === urlBookingId) ? urlBookingId : '')
           || list.find(isPayable)?.id
-          || list.find((entry) => entry.status !== 'completed' && entry.status !== 'cancelled')?.id
+          || list.find((entry) => entry.status !== 'approved' && entry.status !== 'cancelled')?.id
           || list[0]?.id
           || '';
 
@@ -246,8 +246,8 @@ export default function CheckoutPage() {
               </div>
 
               {booking && !payable ? (
-                <div className={`rounded-2xl border p-4 text-body-sm ${booking.status === 'completed' ? 'border-state-success/30 bg-state-success/10 text-state-success' : booking.status === 'cancelled' ? 'border-state-error/30 bg-state-error/10 text-state-error' : 'border-state-warning/30 bg-state-warning/10 text-state-warning'}`}>
-                  {booking.status === 'completed'
+                <div className={`rounded-2xl border p-4 text-body-sm ${booking.status === 'approved' ? 'border-state-success/30 bg-state-success/10 text-state-success' : booking.status === 'cancelled' ? 'border-state-error/30 bg-state-error/10 text-state-error' : 'border-state-warning/30 bg-state-warning/10 text-state-warning'}`}>
+                  {booking.status === 'approved'
                     ? 'This reservation is already settled.'
                     : booking.status === 'cancelled'
                       ? 'This reservation was cancelled.'

@@ -10,8 +10,8 @@ export const MIN_GUESTS = 1;
 export const MAX_GUESTS = 20;
 export const PRESET_MAX_GUESTS = 10;
 
-// pending -> processing (admin approves) -> completed (guest settles payment)
-export const BOOKING_STATUSES = ['pending', 'processing', 'completed', 'cancelled'];
+// pending -> processing (admin approves) -> approved (guest settles payment)
+export const BOOKING_STATUSES = ['pending', 'processing', 'approved', 'cancelled'];
 
 export const calculateNights = (arrival, departure) => {
   const start = new Date(`${arrival}T00:00:00`);
