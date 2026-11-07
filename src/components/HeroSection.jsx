@@ -1,14 +1,7 @@
+import { Link } from 'react-router-dom';
 import { resortData } from '../data/resortData';
 
 export default function HeroSection() {
-  const scrollToBooking = (event) => {
-    event.preventDefault();
-    const bookingSection = document.getElementById('booking');
-    if (bookingSection) {
-      bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   return (
     <section id="stay" className="relative isolate overflow-hidden bg-surface dark:bg-dark-surface">
       <div
@@ -33,19 +26,18 @@ export default function HeroSection() {
           </p>
 
           <div className="mt-10 flex flex-wrap gap-4">
-            <a
-              href="#booking"
-              onClick={scrollToBooking}
+            <Link
+              to="/#booking"
               className="rounded-full bg-resort-500 px-7 py-3.5 text-sm font-semibold text-text-inverse transition hover:bg-resort-400"
             >
               Reserve a stay
-            </a>
-            <a
-              href="#gallery"
+            </Link>
+            <Link
+              to="/#gallery"
               className="rounded-full border border-border bg-surface-elevated/80 px-7 py-3.5 text-sm font-semibold text-text-primary transition hover:border-border-strong hover:bg-surface-overlay dark:border-dark-border dark:bg-dark-surface-elevated/80 dark:text-dark-text-primary dark:hover:border-dark-border-strong dark:hover:bg-dark-surface-overlay"
             >
               View gallery
-            </a>
+            </Link>
           </div>
 
           <div className="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -78,13 +70,12 @@ export default function HeroSection() {
                 <div className="text-sm uppercase tracking-[0.18em] text-text-muted dark:text-dark-text-muted">Laguna Suite</div>
                 <div className="mt-2 text-3xl font-semibold text-text-primary dark:text-dark-text-primary">$420<span className="text-base text-text-muted dark:text-dark-text-muted"> / night</span></div>
               </div>
-              <a
-                href="#booking"
-                onClick={scrollToBooking}
+              <Link
+                to="/#booking"
                 className="rounded-full bg-resort-500 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-resort-400"
               >
                 Book
-              </a>
+              </Link>
             </div>
 
             <div className="mt-6 space-y-3 text-sm text-text-secondary dark:text-dark-text-secondary">

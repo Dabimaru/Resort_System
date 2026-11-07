@@ -56,21 +56,21 @@ export default {
         // Dark mode colors (applied via .dark class)
         dark: {
           surface: {
-            DEFAULT: '#0c4a6e',
-            elevated: '#075985',
-            overlay: '#0369a1',
+            DEFAULT: '#0e131a',
+            elevated: '#151b23',
+            overlay: '#1e252d',
           },
           border: {
-            DEFAULT: 'rgba(186, 230, 253, 0.15)',
-            strong: 'rgba(186, 230, 253, 0.25)',
+            DEFAULT: 'rgba(255, 255, 255, 0.08)',
+            strong: 'rgba(255, 255, 255, 0.14)',
             focus: '#38bdf8',
             error: '#f87171',
             success: '#4ade80',
           },
           text: {
-            primary: '#f0f9ff',
-            secondary: '#bae6fd',
-            muted: '#7dd3fc',
+            primary: '#f4f7f6',
+            secondary: '#cbd5d1',
+            muted: '#8fa0a3',
             inverse: '#0c4a6e',
             link: '#38bdf8',
           },
@@ -135,8 +135,8 @@ export default {
         'hero-gradient': 'linear-gradient(135deg, rgba(14, 116, 144, 0.08), rgba(14, 116, 144, 0.02))',
         'card-gradient': 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4))',
         'mesh-gradient': 'radial-gradient(ellipse at top right, rgba(14, 165, 233, 0.15), transparent 50%), radial-gradient(ellipse at bottom left, rgba(217, 140, 95, 0.1), transparent 50%)',
-        'dark-hero-gradient': 'linear-gradient(135deg, rgba(12, 74, 110, 0.9), rgba(7, 89, 133, 0.6))',
-        'dark-card-gradient': 'linear-gradient(135deg, rgba(14, 116, 144, 0.3), rgba(14, 116, 144, 0.1))',
+        'dark-hero-gradient': 'linear-gradient(135deg, rgba(14, 19, 26, 0.9), rgba(21, 27, 35, 0.6))',
+        'dark-card-gradient': 'linear-gradient(135deg, rgba(14, 19, 26, 0.6), rgba(21, 27, 35, 0.4))',
       },
       transitionDuration: {
         'fast': '150ms',

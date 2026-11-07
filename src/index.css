@@ -25,12 +25,13 @@
 
 /* Dark theme */
 .dark {
-  color: #f0f9ff;
-  background-color: #0c4a6e;
+  color: #f4f7f6;
+  background-color: #0e131a;
 }
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
 }
 
 body {
@@ -42,7 +43,7 @@ body {
 }
 
 .dark body {
-  background-color: #0c4a6e;
+  background-color: #0e131a;
 }
 
 * {

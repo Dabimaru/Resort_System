@@ -20,6 +20,34 @@ function RequireAuth({ children }) {
   return token ? children : <Navigate to="/auth" replace />;
 }
 
+// Scrolls to an in-page anchor when navigating to a hashed route (e.g. /#booking).
+// React Router v6 doesn't scroll to hash targets automatically, so this keeps
+// cross-page section navigation reliable without full page reloads.
+function HashScroller() {
+  const { hash } = useLocation();
+
+  useEffect(() => {
+    if (!hash) {
+      return;
+    }
+
+    const target = hash.slice(1);
+    const element = document.getElementById(target);
+
+    if (!element) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [hash]);
+
+  return null;
+}
+
 function AppShell() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -52,6 +80,7 @@ function AppShell() {
         <Route path="/admin/profile" element={<AdminDashboardPage view="profile" />} />
         <Route path="*" element={<HomePage />} />
       </Routes>
+      <HashScroller />
       {!isAdminRoute && (
         <>
           <ChatWidget />

@@ -41,18 +41,6 @@ export default function Footer() {
     { label: 'Privacy Notice', to: '/privacy' },
   ];
 
-  const handleExploreClick = (event, target) => {
-    if (!target) {
-      return;
-    }
-
-    const section = document.getElementById(target);
-    if (section) {
-      event.preventDefault();
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   const handleChatSupport = (event) => {
     const launcher = document.getElementById('azure-cove-chat-launcher');
     if (launcher) {
@@ -71,16 +59,10 @@ export default function Footer() {
             <h3 className="text-heading-sm font-semibold text-text-primary dark:text-dark-text-primary">Support</h3>
             <nav className="space-y-3">
               {supportItems.map((item) => (
-                <a
+                <Link
                   key={item.label}
-                  href={item.href || item.to}
-                  onClick={(event) => {
-                    if (item.action === 'chat') {
-                      handleChatSupport(event);
-                      return;
-                    }
-                    handleExploreClick(event, item.target);
-                  }}
+                  to={item.href || item.to}
+                  onClick={item.action === 'chat' ? handleChatSupport : undefined}
                   className="flex items-center gap-2 text-body-sm text-text-secondary transition hover:text-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
                 >
                   {item.icon === 'phone' ? (
@@ -93,7 +75,7 @@ export default function Footer() {
                     </svg>
                   ) : null}
                   <span className="truncate">{item.label}</span>
-                </a>
+                </Link>
               ))}
             </nav>
           </div>
