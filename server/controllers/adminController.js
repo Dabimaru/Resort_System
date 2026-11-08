@@ -516,7 +516,7 @@ export const updateBookingStatus = async (req, res) => {
   }
 
   const booking = await updateBookingRecord(existing.id, patch);
-  createReservationNotification({ booking, status, actor: req.user?.role || 'staff' });
+  await createReservationNotification({ booking, status, actor: req.user?.role || 'staff' });
 
   recordAuditLog({
     actorId: req.user?.id,

@@ -8,7 +8,6 @@ import authRoutes from './routes/authRoutes.js';
 import roomRoutes from './routes/roomRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
-import notificationRoutes from './routes/notificationRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import { getSupabaseHealth } from './config/supabase.js';
@@ -79,7 +78,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/contact', contactRoutes);
 
@@ -90,7 +88,6 @@ app.use('/admin', adminRoutes);
 app.use('/chat', chatRoutes);
 app.use('/bookings', bookingRoutes);
 app.use('/payments', paymentRoutes);
-app.use('/notifications', notificationRoutes);
 app.use('/reports', reportRoutes);
 app.use('/contact', contactRoutes);
 

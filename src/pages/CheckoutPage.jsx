@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   getUserBookings,
   processPayment,
   verifyPayment,
 } from '../services/api';
+import useLiveRefresh from '../hooks/useLiveRefresh';
 
 const DOWNPAYMENT_RATE = 0.5;
 
@@ -42,6 +43,21 @@ export default function CheckoutPage() {
   const [payment, setPayment] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [form, setForm] = useState({ method: 'gcash', paymentType: 'downpayment' });
+
+  const refreshBookings = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+
+    try {
+      const response = await getUserBookings(token);
+      setBookings(response?.bookings || []);
+    } catch (error) {
+      setStatus((current) => current.message
+        ? current
+        : { type: 'error', message: error.message || 'Unable to refresh your reservations.' });
+    }
+  }, [token]);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +101,8 @@ export default function CheckoutPage() {
       cancelled = true;
     };
   }, [token, urlBookingId]);
+
+  useLiveRefresh(refreshBookings, { enabled: isLoggedIn });
 
   const booking = useMemo(
     () => bookings.find((entry) => entry.id === selectedId) || null,

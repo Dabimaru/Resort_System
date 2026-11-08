@@ -4,8 +4,8 @@
 
 /* CSS Custom Properties for Theme Support */
 :root {
-  --font-sans: 'Inter', 'Segoe UI', sans-serif;
-  --font-display: 'Playfair Display', 'Georgia', serif;
+  --font-sans: 'DM Sans', 'Segoe UI', sans-serif;
+  --font-display: 'Cormorant Garamond', 'Georgia', serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
@@ -13,7 +13,7 @@
 :root,
 .light {
   color: #0f172a;
-  background-color: #ffffff;
+  background-color: #f8f7f2;
   font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
@@ -26,7 +26,7 @@
 /* Dark theme */
 .dark {
   color: #f4f7f6;
-  background-color: #0e131a;
+  background-color: #101a17;
 }
 
 html {
@@ -36,14 +36,14 @@ html {
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 100%;
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: #f8f7f2;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dark body {
-  background-color: #0e131a;
+  background-color: #101a17;
 }
 
 * {
@@ -71,6 +71,160 @@ select {
   @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
 }
 
+.site-brand {
+  @apply inline-flex items-center gap-3;
+}
+
+.site-brand-mark {
+  @apply flex h-10 w-10 items-center justify-center rounded-full border border-resort-600/25 bg-resort-600 text-white;
+}
+
+.site-brand-mark svg {
+  @apply h-7 w-7;
+}
+
+.site-brand-mark path {
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.site-brand-name {
+  @apply block font-display text-[1.7rem] font-semibold tracking-tight text-text-primary dark:text-dark-text-primary;
+}
+
+.site-brand-subtitle {
+  @apply mt-0.5 block text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-text-muted dark:text-dark-text-muted;
+}
+
+.site-nav-link {
+  @apply relative py-2 text-[0.82rem] font-medium text-text-secondary transition-colors hover:text-resort-700 dark:text-dark-text-secondary dark:hover:text-resort-300;
+}
+
+.site-nav-link::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  content: '';
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease;
+}
+
+.site-nav-link:hover::after,
+.site-nav-link-active::after {
+  transform: scaleX(1);
+}
+
+.site-nav-link-active {
+  @apply text-resort-700 dark:text-resort-300;
+}
+
+.site-icon-button {
+  @apply inline-flex h-10 w-10 items-center justify-center rounded-full text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary focus-visible:ring-2 focus-visible:ring-resort-500 dark:text-dark-text-secondary dark:hover:bg-dark-surface-overlay dark:hover:text-dark-text-primary;
+}
+
+.site-icon-button svg {
+  @apply h-5 w-5;
+}
+
+.site-account-menu {
+  @apply absolute right-0 top-[calc(100%+0.75rem)] z-50 min-w-52 overflow-hidden rounded-lg border border-border bg-surface-elevated p-1.5 shadow-elevation-3 dark:border-dark-border dark:bg-dark-surface-elevated;
+}
+
+.site-account-menu-link {
+  @apply flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary focus-visible:bg-surface-overlay dark:text-dark-text-secondary dark:hover:bg-dark-surface-overlay dark:hover:text-dark-text-primary dark:focus-visible:bg-dark-surface-overlay;
+}
+
+.site-account-menu-link svg {
+  @apply h-[18px] w-[18px] shrink-0;
+}
+
+.site-account-menu-divider {
+  @apply my-1.5 h-px bg-border dark:bg-dark-border;
+}
+
+.site-account-menu-signout {
+  @apply text-state-error hover:bg-state-error/10 hover:text-state-error dark:hover:bg-state-error/10 dark:hover:text-state-error;
+}
+
+.site-header-cta {
+  @apply inline-flex h-10 items-center justify-center gap-2 rounded-md bg-resort-700 px-4 text-sm font-medium text-white transition hover:bg-resort-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resort-500 focus-visible:ring-offset-2 dark:bg-resort-500 dark:text-dark-surface dark:hover:bg-resort-400;
+}
+
+.site-header-cta svg {
+  @apply h-4 w-4;
+}
+
+.site-mobile-panel {
+  @apply border-t border-border bg-surface px-5 pb-6 pt-3 dark:border-dark-border dark:bg-dark-surface;
+}
+
+@media (max-width: 420px) {
+  .site-brand {
+    gap: 0.5rem;
+  }
+
+  .site-brand-mark {
+    height: 2.25rem;
+    width: 2.25rem;
+  }
+
+  .site-brand-name {
+    font-size: 1.45rem;
+  }
+
+  .site-brand-subtitle {
+    display: none;
+  }
+
+  .site-icon-button {
+    height: 2.25rem;
+    width: 2.25rem;
+  }
+
+  .site-header-cta {
+    gap: 0.25rem;
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .site-header .section-shell {
+    gap: 0.5rem;
+  }
+
+  .site-brand-name {
+    font-size: 1.3rem;
+  }
+
+  .site-brand-mark {
+    height: 2rem;
+    width: 2rem;
+  }
+
+  .site-theme-button {
+    display: none;
+  }
+}
+
+.section-kicker {
+  @apply text-xs font-semibold uppercase tracking-[0.18em] text-resort-700 dark:text-resort-300;
+}
+
+.section-title {
+  @apply mt-4 font-display text-4xl font-semibold leading-[1.04] tracking-tight text-text-primary dark:text-dark-text-primary md:text-5xl lg:text-6xl;
+}
+
+.section-description {
+  @apply mt-5 max-w-2xl text-base leading-7 text-text-secondary dark:text-dark-text-secondary md:text-lg md:leading-8;
+}
+
 .container-narrow {
   @apply mx-auto max-w-3xl px-4 sm:px-6 lg:px-8;
 }
@@ -81,19 +235,19 @@ select {
 
 /* Surfaces - Light Mode */
 .card-surface {
-  @apply rounded-2xl border border-border bg-surface-elevated/80 backdrop-blur-sm;
+  @apply rounded-xl border border-border bg-surface-elevated;
 }
 
 .card-surface-elevated {
-  @apply rounded-2xl border border-border bg-surface-elevated shadow-elevation-2;
+  @apply rounded-xl border border-border bg-surface-elevated shadow-elevation-1;
 }
 
 .card-surface-outlined {
-  @apply rounded-2xl border border-border bg-surface;
+  @apply rounded-xl border border-border bg-surface;
 }
 
 .panel-surface {
-  @apply rounded-3xl border border-border bg-surface-elevated/90 backdrop-blur-xl;
+  @apply rounded-2xl border border-border bg-surface-elevated;
 }
 
 /* Dark Mode Surfaces */
@@ -157,7 +311,7 @@ select {
 
 /* Buttons */
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all duration-fast ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-fast ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .btn-primary {

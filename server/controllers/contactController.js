@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { mockInquiries } from '../data/mockStore.js';
+import { createInquiryNotification } from '../services/notificationService.js';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -7,7 +8,7 @@ export const listInquiries = (req, res) => {
   res.json({ message: 'Contact routes ready', inquiries: mockInquiries });
 };
 
-export const createInquiry = (req, res) => {
+export const createInquiry = async (req, res) => {
   const { name, email, message } = req.body || {};
 
   if (!name || !email || !message) {
@@ -36,6 +37,13 @@ export const createInquiry = (req, res) => {
   };
 
   mockInquiries.push(inquiry);
+
+  try {
+    await createInquiryNotification(inquiry);
+  } catch (error) {
+    console.error('Unable to create inquiry notification.', error);
+    return res.status(error.status || 500).json({ message: error.message || 'Unable to notify the resort team about this inquiry.' });
+  }
 
   return res.status(201).json({
     message: 'Inquiry submitted successfully.',

@@ -230,6 +230,22 @@ export function getAdminSettings(token) {
   return request('/admin/settings', {}, token);
 }
 
+export function getAdminNotifications(token) {
+  return request('/admin/notifications', {}, token);
+}
+
+export function markAdminNotificationRead(notificationId, token) {
+  return request(`/admin/notifications/${notificationId}/read`, {
+    method: 'PATCH',
+  }, token);
+}
+
+export function deleteAdminNotification(notificationId, token) {
+  return request(`/admin/notifications/${notificationId}`, {
+    method: 'DELETE',
+  }, token);
+}
+
 export function getReportSummary(token) {
   return request('/reports/summary', {}, token);
 }

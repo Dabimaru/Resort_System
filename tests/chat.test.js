@@ -78,6 +78,13 @@ test('customer chat thread and admin replies work end-to-end', async () => {
     const chatThread = (adminThreadsPayload.threads || []).find((entry) => entry.customerEmail === 'chatguest@example.com');
     assert.ok(chatThread, 'Expected the customer thread to appear in the admin support queue.');
 
+    const notificationsResponse = await fetch(`http://127.0.0.1:${address.port}/api/admin/notifications`, {
+      headers: { Authorization: `Bearer ${adminPayload.token}` },
+    });
+    const notificationsPayload = await notificationsResponse.json();
+    assert.equal(notificationsResponse.status, 200);
+    assert.ok(notificationsPayload.notifications.some((entry) => entry.details.threadId === chatThread.id));
+
     const reply = await fetch(`http://127.0.0.1:${address.port}/api/admin/chat/${chatThread.id}/reply`, {
       method: 'POST',
       headers: {

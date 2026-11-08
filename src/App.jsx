@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import Header from './components/Header';
@@ -24,10 +25,11 @@ function RequireAuth({ children }) {
 // React Router v6 doesn't scroll to hash targets automatically, so this keeps
 // cross-page section navigation reliable without full page reloads.
 function HashScroller() {
-  const { hash } = useLocation();
+  const { hash, pathname } = useLocation();
 
   useEffect(() => {
     if (!hash) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -35,6 +37,7 @@ function HashScroller() {
     const element = document.getElementById(target);
 
     if (!element) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -43,7 +46,7 @@ function HashScroller() {
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [hash]);
+  }, [hash, pathname]);
 
   return null;
 }

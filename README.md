@@ -6,7 +6,7 @@ Azure Cove Resort is a luxury resort website and resort management system founda
 - Frontend: React + Vite + Tailwind CSS
 - Backend: Node.js + Express
 - Database: Supabase PostgreSQL with SQL schema and a local fallback mock layer
-- Authentication: guest account flow + admin RBAC with role/permission enforcement
+- Authentication: guest account flw + admin RBAC with role/permission enforcement
 - Storage: Supabase-ready structure for rooms, media, and resort data
 - QA: automated tests for auth, booking, admin flows, payment, and support chat
 
@@ -16,6 +16,7 @@ Azure Cove Resort is a luxury resort website and resort management system founda
 - Guest account sign-up and sign-in flow
 - Availability checker with booking logic and blocked-date support
 - Admin portal for dashboard, bookings, rooms, roles, staff, reports, and settings
+- Persistent, permission-protected admin alerts for new bookings, inquiries, support chats, and settled payments
 - Support chat widget for guest customers and admin replies
 - Supabase configuration and schema bootstrap support
 
@@ -89,3 +90,4 @@ Key variables include:
 - Live Supabase schema creation requires the project service-role key.
 - Until the real schema is applied, the app uses a local fallback layer for development and testing stability.
 - Backend permission checks enforce access control so the UI alone is not the only authorization boundary.
+- Apply the latest schema with `npm run db:setup` to create the notifications table. Live notification storage requires `SUPABASE_SERVICE_ROLE_KEY`; the key remains server-side and is never exposed to the frontend.

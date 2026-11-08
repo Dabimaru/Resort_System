@@ -5,6 +5,7 @@ import {
   getUserBookings,
   submitBooking,
 } from '../services/api';
+import useLiveRefresh from '../hooks/useLiveRefresh';
 
 const MAX_GUESTS = 20;
 const PRESET_MAX = 10;
@@ -68,6 +69,10 @@ export default function MyBookingsPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useLiveRefresh(loadData, {
+    enabled: Boolean(localStorage.getItem('azureCoveToken')),
+  });
 
   // Deep links from the availability checker or a room card pre-fill the booking form.
   useEffect(() => {

@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { recordAuditLog } from '../data/mockStore.js';
 import { createPayment, listBookings, listPayments, markPaymentPaid, updateBooking } from './supabaseRepository.js';
-import { createReservationNotification } from './notificationService.js';
+import { createPaymentNotification } from './notificationService.js';
 
 export const allowedMethods = ['cash', 'gcash', 'qr_ph'];
 export const allowedPaymentTypes = ['downpayment', 'full'];
@@ -114,6 +114,10 @@ export const verifyReservationPayment = async ({ paymentId, verificationCode, ac
     throw error;
   }
 
+  if (payment.status === 'paid') {
+    return payment;
+  }
+
   if (!verificationCode) {
     const error = new Error('Verification code is required.');
     error.status = 400;
@@ -170,8 +174,8 @@ export const verifyReservationPayment = async ({ paymentId, verificationCode, ac
       },
     });
 
-    createReservationNotification({ booking: updatedBooking || booking, status: 'approved', actor });
   }
 
+  await createPaymentNotification({ payment: settled || payment, booking, actor });
   return settled || payment;
 };

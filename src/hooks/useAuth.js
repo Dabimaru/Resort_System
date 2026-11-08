@@ -3,6 +3,7 @@ import { getAdminMe, adminLogout } from '../services/api';
 
 export function useAuth() {
   const [token, setToken] = useState(() => localStorage.getItem('resortAdminToken') || '');
+  const [isLoading, setIsLoading] = useState(() => Boolean(localStorage.getItem('resortAdminToken')));
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('resortAdminUser');
     return storedUser ? JSON.parse(storedUser) : null;
@@ -11,9 +12,11 @@ export function useAuth() {
   const refreshUser = useCallback(async () => {
     if (!token) {
       setUser(null);
+      setIsLoading(false);
       return null;
     }
 
+    setIsLoading(true);
     try {
       const response = await getAdminMe(token);
       setUser(response.user);
@@ -25,6 +28,8 @@ export function useAuth() {
       localStorage.removeItem('resortAdminToken');
       localStorage.removeItem('resortAdminUser');
       return null;
+    } finally {
+      setIsLoading(false);
     }
   }, [token]);
 
@@ -52,6 +57,7 @@ export function useAuth() {
   return {
     token,
     user,
+    isLoading,
     setToken,
     setUser,
     refreshUser,

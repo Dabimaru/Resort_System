@@ -1,32 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getDashboardMetrics, getReportSummary } from '../services/api';
+import useLiveRefresh from '../hooks/useLiveRefresh';
 
 export default function ReportsPage() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const loadReport = useCallback(async () => {
     const token = localStorage.getItem('azureCoveToken');
-
-    const loadReport = async () => {
-      try {
-        const dashboard = await getDashboardMetrics(token);
-        if (!dashboard?.metrics) {
-          throw new Error('No dashboard metrics were returned.');
-        }
-
-        const payload = await getReportSummary(token);
-        setReport(payload.report);
-      } catch (loadError) {
-        setError(loadError.message || 'Unable to load report data.');
-      } finally {
-        setLoading(false);
+    try {
+      const dashboard = await getDashboardMetrics(token);
+      if (!dashboard?.metrics) {
+        throw new Error('No dashboard metrics were returned.');
       }
-    };
 
-    loadReport();
+      const payload = await getReportSummary(token);
+      setReport(payload.report);
+      setError('');
+    } catch (loadError) {
+      setError(loadError.message || 'Unable to load report data.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadReport();
+  }, [loadReport]);
+
+  useLiveRefresh(loadReport, {
+    enabled: Boolean(localStorage.getItem('azureCoveToken')),
+  });
 
   if (loading) {
     return <div className="min-h-screen bg-surface px-4 py-20 text-center text-text-primary dark:bg-dark-surface dark:text-dark-text-primary">Loading reports...</div>;

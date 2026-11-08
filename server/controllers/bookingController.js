@@ -128,7 +128,7 @@ export const createBookingController = async (req, res) => {
     });
 
     const saved = await createBooking(record);
-    notifyReservationCreated(saved, user ? 'guest' : 'system');
+    await notifyReservationCreated(saved, user ? 'guest' : 'system');
 
     return res.status(201).json({
       message: 'Booking request received successfully.',

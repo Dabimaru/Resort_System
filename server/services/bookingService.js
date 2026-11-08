@@ -206,6 +206,5 @@ export const buildBookingRecord = async ({
   };
 };
 
-export const notifyReservationCreated = (booking, actor = 'guest') => {
+export const notifyReservationCreated = (booking, actor = 'guest') =>
   createReservationNotification({ booking, status: 'created', actor });
-};

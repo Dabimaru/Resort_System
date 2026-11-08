@@ -26,6 +26,11 @@ import {
   updateStaffAccount,
 } from '../controllers/adminController.js';
 import { listChatThreads, replyToChatThread } from '../controllers/chatController.js';
+import {
+  deleteNotificationController,
+  listNotificationsController,
+  markNotificationReadController,
+} from '../controllers/notificationController.js';
 import { requireAnyPermission, requireAuth, requireAnyRole, requirePermission } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -60,5 +65,8 @@ router.get('/inquiries', requireAuth, requirePermission('inquiries.view'), listI
 router.get('/chat', requireAuth, requirePermission('chat.view'), listChatThreads);
 router.post('/chat/:id/reply', requireAuth, requirePermission('chat.reply'), replyToChatThread);
 router.get('/settings', requireAuth, requirePermission('settings.view'), listSystemSettings);
+router.get('/notifications', requireAuth, requirePermission('notifications.view'), listNotificationsController);
+router.patch('/notifications/:id/read', requireAuth, requirePermission('notifications.view'), markNotificationReadController);
+router.delete('/notifications/:id', requireAuth, requirePermission('notifications.delete'), deleteNotificationController);
 
 export default router;

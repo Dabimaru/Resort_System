@@ -1,43 +1,58 @@
+import { Link } from 'react-router-dom';
+import { resortData } from '../data/resortData';
+
+const highlights = [
+  'A private stretch of shoreline',
+  'Unhurried, thoughtful hospitality',
+  'Locally inspired food and experiences',
+];
+
 export default function AboutSection() {
   return (
-    <section id="about" className="py-24 bg-surface dark:bg-dark-surface">
-      <div className="section-shell grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="space-y-6">
-          <span className="inline-flex rounded-full border border-resort-500/30 bg-resort-500/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-resort-600 dark:border-resort-500/30 dark:bg-resort-500/20 dark:text-resort-400">
-            About the resort
-          </span>
-          <h2 className="text-4xl font-semibold tracking-tight text-text-primary dark:text-dark-text-primary md:text-5xl">
-            Thoughtful luxury rooted in place.
-          </h2>
-          <p className="text-lg text-text-secondary dark:text-dark-text-secondary">
-            Azure Cove blends contemporary comfort with the natural rhythm of the coast — an intimate hideaway shaped by warm hospitality, restorative rituals, and breathtaking sea views.
-          </p>
-          <p className="text-text-muted dark:text-dark-text-muted">
-            From our sunrise spa rituals and chef-led dining to curated island journeys, every stay is designed to feel elevated, effortless, and deeply personal.
+    <section id="about" className="overflow-hidden bg-surface py-20 dark:bg-dark-surface md:py-28">
+      <div className="section-shell grid items-center gap-12 lg:grid-cols-[1fr_0.9fr] lg:gap-20">
+        <div className="relative min-h-[420px] overflow-hidden rounded-md md:min-h-[560px]">
+          <img
+            src={resortData.gallery[1]}
+            alt="Natural coastline surrounding the resort"
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#132d27]/55 via-transparent to-transparent" />
+          <p className="absolute bottom-6 left-6 max-w-xs font-display text-3xl italic leading-tight text-white md:bottom-8 md:left-8 md:text-4xl">
+            Room to breathe. Time to be.
           </p>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div className="card-surface p-5">
-            <div className="mb-4 text-3xl text-resort-600 dark:text-resort-400">01</div>
-            <h3 className="text-xl font-semibold text-text-primary dark:text-dark-text-primary">Immersive experiences</h3>
-            <p className="mt-3 text-sm text-text-secondary dark:text-dark-text-secondary">Private boat charters, guided snorkeling, and disappearing into the shoreline at golden hour.</p>
-          </div>
-          <div className="card-surface p-5">
-            <div className="mb-4 text-3xl text-resort-600 dark:text-resort-400">02</div>
-            <h3 className="text-xl font-semibold text-text-primary dark:text-dark-text-primary">Modern comfort</h3>
-            <p className="mt-3 text-sm text-text-secondary dark:text-dark-text-secondary">Calm interiors, all-day service, and refined details that elevate every moment.</p>
-          </div>
-          <div className="card-surface p-5">
-            <div className="mb-4 text-3xl text-resort-600 dark:text-resort-400">03</div>
-            <h3 className="text-xl font-semibold text-text-primary dark:text-dark-text-primary">Culinary artistry</h3>
-            <p className="mt-3 text-sm text-text-secondary dark:text-dark-text-secondary">Fresh coastal cuisine, handcrafted cocktails, and memorable dinners by the water.</p>
-          </div>
-          <div className="card-surface p-5">
-            <div className="mb-4 text-3xl text-resort-600 dark:text-resort-400">04</div>
-            <h3 className="text-xl font-semibold text-text-primary dark:text-dark-text-primary">Wellness focus</h3>
-            <p className="mt-3 text-sm text-text-secondary dark:text-dark-text-secondary">Tailored treatments and restorative programs built around mindful living.</p>
-          </div>
+        <div className="py-2">
+          <p className="section-kicker">Welcome to Azure Cove</p>
+          <h2 className="section-title max-w-xl">
+            A place to find your own pace.
+          </h2>
+          <p className="section-description">
+            We believe the best escapes leave space for the simple things: a long breakfast, salt in the air, and nowhere else you need to be.
+          </p>
+          <p className="mt-4 max-w-xl text-base leading-7 text-text-secondary dark:text-dark-text-secondary">
+            Set along the coast, Azure Cove pairs the ease of a private hideaway with the warmth of a team who knows when to step in—and when to let the moment be yours.
+          </p>
+
+          <ul className="mt-8 space-y-4 border-y border-border py-6 dark:border-dark-border">
+            {highlights.map((highlight) => (
+              <li key={highlight} className="flex items-center gap-3 text-sm font-medium text-text-primary dark:text-dark-text-primary">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-resort-100 text-resort-700 dark:bg-resort-900 dark:text-resort-200" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5">
+                    <path d="m3.5 8 3 3 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+                {highlight}
+              </li>
+            ))}
+          </ul>
+
+          <Link to="/#experiences" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-resort-700 hover:text-resort-900 dark:text-resort-300 dark:hover:text-resort-100">
+            Discover the resort
+            <span aria-hidden="true">→</span>
+          </Link>
         </div>
       </div>
     </section>

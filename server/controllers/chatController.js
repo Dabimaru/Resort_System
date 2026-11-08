@@ -5,6 +5,7 @@ import {
   getThreadForCustomer,
   listThreads,
 } from '../services/chatRepository.js';
+import { createChatNotification } from '../services/notificationService.js';
 
 export const getCustomerChatThread = async (req, res) => {
   const customer = req.user;
@@ -58,13 +59,14 @@ export const sendCustomerMessage = async (req, res) => {
       customerEmail: customer.email,
     });
 
-    await appendMessage(thread.id, {
+    const savedMessage = await appendMessage(thread.id, {
       sender: 'customer',
       senderName: customer.name,
       text: messageText,
     });
 
     const refreshed = await getThreadById(thread.id);
+    await createChatNotification({ thread: refreshed || thread, message: savedMessage || { text: messageText } });
 
     return res.status(200).json({
       message: 'Message sent successfully.',

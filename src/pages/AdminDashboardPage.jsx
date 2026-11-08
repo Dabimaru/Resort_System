@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
-import AdminLoginPage from './AdminLoginPage';
+import useLiveRefresh from '../hooks/useLiveRefresh';
 import {
   getAdminAuditLogs,
   getAdminAvailability,
@@ -14,6 +14,9 @@ import {
   getAdminRoles,
   getAdminSettings,
   getAdminStaff,
+  getAdminNotifications,
+  markAdminNotificationRead,
+  deleteAdminNotification,
   getDashboardMetrics,
   getDashboardStats,
   createAdminRole,
@@ -50,6 +53,7 @@ const defaultPermissionState = {
   reports: ['reports.view'],
   inquiries: ['inquiries.view'],
   chat: ['chat.view'],
+  notifications: ['notifications.view'],
   settings: ['settings.view'],
 };
 
@@ -74,7 +78,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
     return path.split('/').pop() || 'dashboard';
   }, [location.pathname, view]);
 
-  const { token, user, signOut, isAuthenticated } = useAuth();
+  const { token, user, signOut, isAuthenticated, isLoading: authLoading } = useAuth();
   const permissions = usePermissions(user);
   const [stats, setStats] = useState(null);
   const [metrics, setMetrics] = useState(null);
@@ -90,6 +94,9 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
   const [settings, setSettings] = useState({});
   const [auditLogs, setAuditLogs] = useState([]);
   const [availabilityMap, setAvailabilityMap] = useState({});
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [selectedNotificationId, setSelectedNotificationId] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [calendarMonth, setCalendarMonth] = useState(() => {
@@ -115,52 +122,62 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
     }
   }, [calendarNotes]);
 
-  const fetchAdminState = async () => {
+  const hasPermission = (permission) => permissions.has(permission) || permissions.has('all');
+
+  const fetchAdminState = useCallback(async ({ showLoading = false } = {}) => {
     if (!token) {
       setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
-      const [statsResponse, metricsResponse, bookingsResponse, paymentsResponse, staffResponse, rolesResponse, permissionsResponse, inquiriesResponse, chatResponse, settingsResponse, auditResponse, availabilityResponse] = await Promise.all([
-        getDashboardStats(token).catch(() => null),
-        getDashboardMetrics(token).catch(() => null),
-        getAdminBookings(token).catch(() => ({ bookings: [] })),
-        getAdminPayments(token).catch(() => ({ payments: [] })),
-        getAdminStaff(token).catch(() => ({ staff: [] })),
-        getAdminRoles(token).catch(() => ({ roles: [] })),
-        getAdminPermissions(token).catch(() => ({ permissions: defaultPermissionState })),
-        getAdminInquiries(token).catch(() => ({ inquiries: [] })),
-        getAdminChatThreads(token).catch(() => ({ threads: [] })),
-        getAdminSettings(token).catch(() => ({ settings: {} })),
-        getAdminAuditLogs(token).catch(() => ({ logs: [] })),
-        getAdminAvailability(token).catch(() => ({ availability: {} })),
-      ]);
-
-      setStats(statsResponse?.stats || null);
-      setMetrics(metricsResponse?.metrics || null);
-      setBookings(bookingsResponse?.bookings || []);
-      setPayments(Array.isArray(paymentsResponse) ? paymentsResponse : paymentsResponse?.payments || []);
-      setStaff(staffResponse?.staff || []);
-      setRoles(rolesResponse?.roles || []);
-      setPermissionsCatalog(permissionsResponse?.permissions || defaultPermissionState);
-      setInquiries(inquiriesResponse?.inquiries || []);
-      setChatThreads(chatResponse?.threads || []);
-      setSettings(settingsResponse?.settings || {});
-      setAuditLogs(auditResponse?.logs || []);
-      setAvailabilityMap(availabilityResponse?.availability || {});
-      setError('');
+      if (showLoading) {
+        setLoading(true);
+      }
+      const canViewBookings = hasPermission('bookings.view');
+      const canViewReports = hasPermission('reports.view');
+      const canViewRoles = hasPermission('roles.view');
+      const canViewSettings = hasPermission('settings.view');
+      const requests = [
+        ...(canViewBookings || canViewReports ? [['dashboard statistics', () => getDashboardStats(token), (response) => setStats(response?.stats || null)]] : []),
+        ...(['admin', 'frontdesk', 'super_admin'].includes(user?.role) ? [['dashboard metrics', () => getDashboardMetrics(token), (response) => setMetrics(response?.metrics || null)]] : []),
+        ...(canViewBookings ? [['bookings', () => getAdminBookings(token), (response) => setBookings(response?.bookings || [])]] : []),
+        ...(canViewBookings || canViewReports ? [['payments', () => getAdminPayments(token), (response) => setPayments(Array.isArray(response) ? response : response?.payments || [])]] : []),
+        ...(hasPermission('staff.view') ? [['staff', () => getAdminStaff(token), (response) => setStaff(response?.staff || [])]] : []),
+        ...(canViewRoles ? [['roles', () => getAdminRoles(token), (response) => setRoles(response?.roles || [])]] : []),
+        ...(canViewRoles ? [['permissions', () => getAdminPermissions(token), (response) => setPermissionsCatalog(response?.permissions || defaultPermissionState)]] : []),
+        ...(hasPermission('inquiries.view') ? [['inquiries', () => getAdminInquiries(token), (response) => setInquiries(response?.inquiries || [])]] : []),
+        ...(hasPermission('chat.view') ? [['chat', () => getAdminChatThreads(token), (response) => setChatThreads(response?.threads || [])]] : []),
+        ...(canViewSettings ? [['settings', () => getAdminSettings(token), (response) => setSettings(response?.settings || {})]] : []),
+        ...(canViewSettings ? [['audit logs', () => getAdminAuditLogs(token), (response) => setAuditLogs(response?.logs || [])]] : []),
+        ...(canViewBookings ? [['availability', () => getAdminAvailability(token), (response) => setAvailabilityMap(response?.availability || {})]] : []),
+        ...(hasPermission('notifications.view') ? [['notifications', () => getAdminNotifications(token), (response) => setNotifications(response?.notifications || [])]] : []),
+      ];
+      const results = await Promise.allSettled(requests.map(([, request]) => request()));
+      const failures = [];
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          requests[index][2](result.value);
+        } else {
+          failures.push(`${requests[index][0]}: ${result.reason?.message || 'request failed'}`);
+        }
+      });
+      setError(failures.length ? `Some admin data could not be loaded. ${failures.join('; ')}` : '');
     } catch (err) {
       setError(err.message || 'Unable to load admin data.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [permissions, token, user?.role]);
 
   useEffect(() => {
-    fetchAdminState();
-  }, [token]);
+    fetchAdminState({ showLoading: true });
+  }, [fetchAdminState]);
+
+  useLiveRefresh(fetchAdminState, {
+    enabled: Boolean(token),
+    intervalMs: 60_000,
+  });
 
   useEffect(() => {
     if (chatThreads.length > 0 && !chatThreads.some((thread) => thread.id === selectedChatThreadId)) {
@@ -169,6 +186,27 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
   }, [chatThreads, selectedChatThreadId]);
 
   const navItems = adminNav.filter((item) => permissions.has(item.permission) || permissions.has('all'));
+
+  const handleNotificationSelect = async (notification) => {
+    setSelectedNotificationId(notification.id);
+    if (notification.read) return;
+    try {
+      await markAdminNotificationRead(notification.id, token);
+      setNotifications((current) => current.map((item) => item.id === notification.id ? { ...item, read: true } : item));
+    } catch (err) {
+      setError(err.message || 'Unable to mark the notification as read.');
+    }
+  };
+
+  const handleNotificationDelete = async (notificationId) => {
+    try {
+      await deleteAdminNotification(notificationId, token);
+      setNotifications((current) => current.filter((item) => item.id !== notificationId));
+      setSelectedNotificationId((current) => current === notificationId ? '' : current);
+    } catch (err) {
+      setError(err.message || 'Unable to delete the notification.');
+    }
+  };
 
   const handleStatusUpdate = async (bookingId, nextStatus) => {
     try {
@@ -367,8 +405,12 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
     }
   };
 
+  if (authLoading) {
+    return <div className="min-h-screen bg-surface px-6 py-16 text-center text-text-primary dark:bg-dark-surface dark:text-dark-text-primary">Checking administrator access...</div>;
+  }
+
   if (!isAuthenticated || !user) {
-    return <AdminLoginPage />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   const statusCount = (status) =>
@@ -1039,7 +1081,76 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button" className="rounded-full border border-border bg-surface-elevated px-3 py-2 text-sm text-text-secondary hover:bg-surface-overlay dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-secondary dark:hover:bg-dark-surface-overlay">🔔 Alerts</button>
+            {hasPermission('notifications.view') && (
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-expanded={notificationsOpen}
+                  aria-haspopup="dialog"
+                  onClick={() => setNotificationsOpen((open) => !open)}
+                  className="relative rounded-full border border-border bg-surface-elevated px-3 py-2 text-sm text-text-secondary hover:bg-surface-overlay dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-secondary dark:hover:bg-dark-surface-overlay"
+                >
+                  Alerts
+                  {notifications.filter((notification) => !notification.read).length > 0 && (
+                    <span className="ml-2 rounded-full bg-state-error px-2 py-0.5 text-xs font-semibold text-white">
+                      {notifications.filter((notification) => !notification.read).length}
+                    </span>
+                  )}
+                </button>
+                {notificationsOpen && (
+                  <section role="dialog" aria-label="Admin notifications" className="absolute right-0 top-full z-50 mt-3 max-h-[75vh] w-[min(90vw,28rem)] overflow-y-auto rounded-2xl border border-border bg-surface-elevated p-4 shadow-elevation-4 dark:border-dark-border dark:bg-dark-surface-elevated">
+                    <div className="flex items-center justify-between">
+                      <h2 className="font-semibold text-text-primary dark:text-dark-text-primary">Notifications</h2>
+                      <button type="button" onClick={() => setNotificationsOpen(false)} className="rounded-full px-2 py-1 text-sm text-text-muted hover:bg-surface-overlay dark:text-dark-text-muted dark:hover:bg-dark-surface-overlay">Close</button>
+                    </div>
+                    {notifications.length === 0 ? (
+                      <p className="py-6 text-sm text-text-muted dark:text-dark-text-muted">No notifications yet.</p>
+                    ) : (
+                      <div className="mt-3 space-y-2">
+                        {notifications.map((notification) => (
+                          <button
+                            key={notification.id}
+                            type="button"
+                            onClick={() => handleNotificationSelect(notification)}
+                            className={`block w-full rounded-xl border p-3 text-left ${selectedNotificationId === notification.id ? 'border-resort-500 bg-resort-500/10' : 'border-border bg-surface dark:border-dark-border dark:bg-dark-surface'} ${notification.read ? 'opacity-75' : ''}`}
+                          >
+                            <span className="flex items-center justify-between gap-3">
+                              <span className="font-medium text-text-primary dark:text-dark-text-primary">{notification.title}</span>
+                              {!notification.read && <span className="h-2 w-2 shrink-0 rounded-full bg-resort-500" aria-label="Unread" />}
+                            </span>
+                            <span className="mt-1 block text-sm text-text-secondary dark:text-dark-text-secondary">{notification.message}</span>
+                            <span className="mt-2 block text-xs text-text-muted dark:text-dark-text-muted">{notification.createdAt ? new Date(notification.createdAt).toLocaleString() : ''}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {(() => {
+                      const selected = notifications.find((notification) => notification.id === selectedNotificationId);
+                      if (!selected) return null;
+                      return (
+                        <div className="mt-4 border-t border-border pt-4 dark:border-dark-border">
+                          <h3 className="font-semibold text-text-primary dark:text-dark-text-primary">{selected.title}</h3>
+                          <p className="mt-1 text-sm text-text-secondary dark:text-dark-text-secondary">{selected.message}</p>
+                          <dl className="mt-3 space-y-2">
+                            {Object.entries(selected.details || {}).map(([key, value]) => (
+                              <div key={key} className="grid grid-cols-[7rem_1fr] gap-2 text-sm">
+                                <dt className="capitalize text-text-muted dark:text-dark-text-muted">{key.replace(/([A-Z])/g, ' $1')}</dt>
+                                <dd className="break-words text-text-primary dark:text-dark-text-primary">{Array.isArray(value) || (value && typeof value === 'object') ? JSON.stringify(value) : String(value ?? '—')}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                          {hasPermission('notifications.delete') && (
+                            <button type="button" onClick={() => handleNotificationDelete(selected.id)} className="mt-4 rounded-full border border-state-error/40 bg-state-error/10 px-4 py-2 text-sm font-medium text-state-error hover:bg-state-error/20">
+                              Delete notification
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </section>
+                )}
+              </div>
+            )}
             <div className="flex items-center gap-3 rounded-full border border-border bg-surface-elevated px-3 py-2 dark:border-dark-border dark:bg-dark-surface-elevated">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-resort-500/10 text-sm font-semibold text-resort-600 dark:bg-resort-500/20 dark:text-resort-400">{user?.name?.slice(0, 1).toUpperCase() || 'A'}</div>
               <div>
@@ -1079,10 +1190,11 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
           <main className="flex-1">
             {loading ? (
               <div className="rounded-3xl border border-border bg-surface-elevated p-8 text-text-primary dark:border-dark-border dark:bg-dark-surface-elevated">Loading admin console...</div>
-            ) : error ? (
-              <div className="rounded-3xl border border-state-error/30 bg-state-error/10 p-6 text-state-error">{error}</div>
             ) : (
-              contentMap[currentView] || contentMap.dashboard
+              <>
+                {error && <div role="alert" className="mb-4 rounded-2xl border border-state-error/30 bg-state-error/10 p-4 text-sm text-state-error">{error}</div>}
+                {contentMap[currentView] || contentMap.dashboard}
+              </>
             )}
           </main>
         </div>

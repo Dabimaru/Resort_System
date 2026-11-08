@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { checkAvailability } from '../services/api';
 
 const PRESET_MAX = 10;
@@ -17,6 +17,7 @@ const range = (start, end) => Array.from({ length: end - start + 1 }, (_, index)
 
 export default function BookingForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [form, setForm] = useState(initialForm);
   const [customAdults, setCustomAdults] = useState('');
   const [customChildren, setCustomChildren] = useState('');
@@ -44,7 +45,7 @@ export default function BookingForm() {
       setForm((current) => ({ ...current, suite: savedSuite }));
       localStorage.removeItem('selectedSuite');
     }
-  }, []);
+  }, [location.hash]);
 
   const resolveCount = (presetValue, customValue, fallback) => {
     if (presetValue !== 'custom') {
@@ -179,10 +180,11 @@ export default function BookingForm() {
   const showAvailableActions = status.type === 'success' && availability?.availableCount > 0;
 
   return (
-    <form onSubmit={handleCheck} className="rounded-[2rem] border border-border bg-surface-elevated p-6 shadow-glow dark:border-dark-border dark:bg-dark-surface-elevated">
+    <form onSubmit={handleCheck} className="rounded-md border border-border bg-surface-elevated p-6 shadow-elevation-1 dark:border-dark-border dark:bg-dark-surface-elevated md:p-8">
       <div className="mb-6">
-        <p className="text-xs uppercase tracking-[0.22em] text-resort-600 dark:text-resort-400">Check availability</p>
-        <h3 className="mt-2 text-2xl font-semibold text-text-primary dark:text-dark-text-primary">Plan your next escape</h3>
+        <p className="section-kicker">Check availability</p>
+        <h3 className="mt-2 font-display text-3xl font-semibold text-text-primary dark:text-dark-text-primary">Plan your stay</h3>
+        <p className="mt-2 text-sm leading-6 text-text-secondary dark:text-dark-text-secondary">Choose your dates and we’ll show you what’s open.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -259,7 +261,7 @@ export default function BookingForm() {
       </button>
 
       {status.message ? (
-        <div className={`mt-4 rounded-2xl border p-4 text-body-sm ${status.type === 'success' ? 'border-state-success/30 bg-state-success/10 text-state-success' : 'border-state-error/30 bg-state-error/10 text-state-error'}`}>
+        <div className={`mt-4 rounded-md border p-4 text-body-sm ${status.type === 'success' ? 'border-state-success/30 bg-state-success/10 text-state-success' : 'border-state-error/30 bg-state-error/10 text-state-error'}`}>
           {status.message}
         </div>
       ) : null}

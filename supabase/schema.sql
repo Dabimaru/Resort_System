@@ -205,6 +205,24 @@ create index if not exists idx_staff_profiles_role on staff_profiles(role_id);
 create index if not exists idx_user_roles_user_id on user_roles(user_id);
 create index if not exists idx_audit_logs_resource on audit_logs(resource);
 
+create table if not exists notifications (
+  id uuid primary key default uuid_generate_v4(),
+  type text not null,
+  title text not null,
+  message text not null,
+  details jsonb not null default '{}'::jsonb,
+  user_id text,
+  booking_id text,
+  priority text not null default 'normal',
+  channel text not null default 'dashboard',
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+alter table notifications enable row level security;
+create index if not exists idx_notifications_created_at on notifications(created_at desc);
+create index if not exists idx_notifications_unread on notifications(is_read, created_at desc);
+
 insert into roles (id, name, description, is_system)
 values
   ('a1ddb8fc-4d84-4768-b975-bf18f4473d2f', 'Super Admin', 'Full access to the resort administration system', true),
