@@ -13,6 +13,7 @@ export const permissionGroups = {
   reports: ['reports.view', 'reports.export'],
   inquiries: ['inquiries.view', 'inquiries.reply', 'inquiries.delete'],
   chat: ['chat.view', 'chat.reply', 'chat.manage'],
+  notifications: ['notifications.view', 'notifications.delete'],
   settings: ['settings.view', 'settings.edit'],
 };
 
@@ -35,7 +36,7 @@ export const mockRoles = [
     permissions: [
       'bookings.view', 'bookings.create', 'bookings.edit', 'bookings.confirm', 'bookings.cancel',
       'rooms.view', 'rooms.create', 'rooms.edit', 'rooms.update_status',
-      'reports.view', 'reports.export', 'inquiries.view', 'inquiries.reply', 'chat.view', 'chat.reply', 'settings.view',
+      'reports.view', 'reports.export', 'inquiries.view', 'inquiries.reply', 'chat.view', 'chat.reply', 'notifications.view', 'notifications.delete', 'settings.view',
     ],
     createdAt: new Date().toISOString(),
   },
@@ -46,7 +47,7 @@ export const mockRoles = [
     isSystem: false,
     permissions: [
       'bookings.view', 'bookings.create', 'bookings.edit', 'bookings.confirm',
-      'rooms.view', 'inquiries.view', 'inquiries.reply', 'chat.view', 'chat.reply', 'settings.view',
+      'rooms.view', 'inquiries.view', 'inquiries.reply', 'chat.view', 'chat.reply', 'notifications.view', 'settings.view',
     ],
     createdAt: new Date().toISOString(),
   },
@@ -55,7 +56,7 @@ export const mockRoles = [
     name: 'Cashier',
     description: 'Payment and payment reconciliation access',
     isSystem: false,
-    permissions: ['bookings.view', 'bookings.confirm', 'reports.view', 'reports.export'],
+    permissions: ['bookings.view', 'bookings.confirm', 'reports.view', 'reports.export', 'notifications.view'],
     createdAt: new Date().toISOString(),
   },
   {
@@ -99,7 +100,7 @@ export const mockUsers = [
     passwordHash: '374af7f6bd6884e86fbc4112d5a52f94729d1adadd7b026128b270f4adbadf10',
     role: 'frontdesk',
     roles: ['receptionist'],
-    permissions: ['bookings.view', 'bookings.create', 'bookings.edit', 'bookings.confirm', 'rooms.view', 'inquiries.view', 'inquiries.reply', 'chat.view', 'chat.reply', 'settings.view'],
+    permissions: ['bookings.view', 'bookings.create', 'bookings.edit', 'bookings.confirm', 'rooms.view', 'inquiries.view', 'inquiries.reply', 'chat.view', 'chat.reply', 'notifications.view', 'settings.view'],
     isStaff: true,
     isActive: true,
     createdAt: new Date().toISOString(),

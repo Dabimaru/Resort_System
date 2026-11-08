@@ -1,58 +1,23 @@
 import { Link } from 'react-router-dom';
 import { resortData } from '../data/resortData';
 
+const exploreLinks = [
+  ['The resort', '/#stay'],
+  ['Suites', '/#suites'],
+  ['Experiences', '/#experiences'],
+  ['Gallery', '/#gallery'],
+  ['Guest stories', '/#reviews'],
+];
+
+const guestLinks = [
+  ['Check availability', '/#booking'],
+  ['My bookings', '/my-bookings'],
+  ['Terms and conditions', '/terms'],
+  ['House rules', '/house-rules'],
+  ['Privacy notice', '/privacy'],
+];
+
 export default function Footer() {
-  const address = resortData.contact?.address || '17 Shoreline Point, Riviera Bay, CA';
-  const phone = resortData.contact?.phone || '+1 (800) 555-0148';
-  const email = resortData.contact?.email || 'stay@azurecove.com';
-
-  const supportItems = [
-    { label: 'My Bookings', to: '/my-bookings' },
-    { label: 'Checkout', to: '/checkout' },
-    { label: phone, href: `tel:${phone.replace(/\D/g, '')}`, icon: 'phone' },
-    { label: email, href: `mailto:${email}`, icon: 'mail' },
-    { label: 'Chat Support', to: '#chat', action: 'chat' },
-    { label: 'Inquiries', to: '/#contact', target: 'contact' },
-  ];
-
-  const exploreItems = [
-    { label: 'Stay', to: '/#stay', target: 'stay' },
-    { label: 'Suites', to: '/#suites', target: 'suites' },
-    { label: 'Experience', to: '/#experiences', target: 'experiences' },
-    { label: 'Gallery', to: '/#gallery', target: 'gallery' },
-    { label: 'Reviews', to: '/#reviews', target: 'reviews' },
-  ];
-
-  const socialItems = [
-    { label: 'Facebook', href: 'https://facebook.com', icon: (
-      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-    )},
-    { label: 'Instagram', href: 'https://instagram.com', icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-    )},
-    { label: 'TikTok', href: 'https://tiktok.com', icon: (
-      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22 6.8c-.3 1.3-.8 2.6-1.5 3.9 1.9-.4 3.4-1.5 4.1-3.2-.1 2.6-1.5 4.9-3.9 5.6 0 0 .2 2.8-.4 4.2 1.5.4 3 1 4.6 2 1.1 0 2.2-.1 3.2-.4.8-2-.2-4.1-.8-5.9.9 2.3 1.6 4.7 2 7.3-.6-2.6-.8-5.2-.7-7.9-.5 2-.8 4-1.5 5.8-1.1 0-2.2-.2-3.3-.5 1-2.4.2-4.8-.7-7.1-1.6 1-.9 2.3-2.1 3.7-3.4-.3-1.6-.7-3.2-1.4-4.7 1.9.5 3.5 1.6 4.5 3.1-.2-2.8-1.2-5.4-3.4-7.1 2.7.9 5 2.5 6.7 4.6-.5-2.5-1.4-4.9-3-6.8z"/></svg>
-    )},
-  ];
-
-  const policyItems = [
-    { label: 'Terms and Conditions', to: '/terms' },
-    { label: 'House Rules', to: '/house-rules' },
-    { label: 'Privacy Notice', to: '/privacy' },
-  ];
-
-  const handleExploreClick = (event, target) => {
-    if (!target) {
-      return;
-    }
-
-    const section = document.getElementById(target);
-    if (section) {
-      event.preventDefault();
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   const handleChatSupport = (event) => {
     const launcher = document.getElementById('azure-cove-chat-launcher');
     if (launcher) {
@@ -62,138 +27,66 @@ export default function Footer() {
   };
 
   return (
-    <footer className="border-t border-border bg-surface dark:border-dark-border dark:bg-dark-surface">
-      <div className="section-shell py-12 lg:py-16">
-        {/* Main Content Grid */}
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.5fr_1fr_1fr] lg:gap-8">
-          {/* Left Section: Support */}
-          <div className="space-y-4">
-            <h3 className="text-heading-sm font-semibold text-text-primary dark:text-dark-text-primary">Support</h3>
-            <nav className="space-y-3">
-              {supportItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href || item.to}
-                  onClick={(event) => {
-                    if (item.action === 'chat') {
-                      handleChatSupport(event);
-                      return;
-                    }
-                    handleExploreClick(event, item.target);
-                  }}
-                  className="flex items-center gap-2 text-body-sm text-text-secondary transition hover:text-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
-                >
-                  {item.icon === 'phone' ? (
-                    <svg className="h-4 w-4 shrink-0 text-text-muted dark:text-dark-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                  ) : item.icon === 'mail' ? (
-                    <svg className="h-4 w-4 shrink-0 text-text-muted dark:text-dark-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  ) : null}
-                  <span className="truncate">{item.label}</span>
-                </a>
-              ))}
-            </nav>
+    <footer className="bg-[#142b25] text-white">
+      <div className="section-shell py-14 md:py-16">
+        <div className="grid gap-12 border-b border-white/15 pb-12 md:grid-cols-[1.4fr_0.7fr_0.8fr_1fr] md:gap-10">
+          <div className="max-w-sm">
+            <Link to="/" className="inline-flex items-center gap-3" aria-label={`${resortData.company} home`}>
+              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 text-[#e1c49b]" aria-hidden="true">
+                <svg viewBox="0 0 40 40" fill="none" className="h-7 w-7">
+                  <path d="M5 24.5c4.2 0 4.2-4 8.4-4s4.2 4 8.4 4 4.2-4 8.4-4 4.2 4 8.4 4M5 31c4.2 0 4.2-4 8.4-4s4.2 4 8.4 4 4.2-4 8.4-4 4.2 4 8.4 4M20 5.5v11m-5.5-5.5H25.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <span>
+                <span className="block font-display text-2xl font-semibold leading-none">{resortData.company}</span>
+                <span className="mt-1 block text-[0.62rem] uppercase tracking-[0.2em] text-white/55">A coastal sanctuary</span>
+              </span>
+            </Link>
+            <p className="mt-5 text-sm leading-6 text-white/65">{resortData.tagline}</p>
+            <a href={`mailto:${resortData.contact.email}`} className="mt-5 inline-block text-sm text-[#e1c49b] transition hover:text-white">
+              {resortData.contact.email}
+            </a>
           </div>
 
-          {/* Center-Left Section: Explore */}
-          <div className="space-y-4">
-            <h3 className="text-heading-sm font-semibold text-text-primary dark:text-dark-text-primary">Explore</h3>
-            <nav className="space-y-3">
-              {exploreItems.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  onClick={(event) => handleExploreClick(event, item.target)}
-                  className="block text-body-sm text-text-secondary transition hover:text-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
+          <FooterLinks title="Explore" links={exploreLinks} />
+          <FooterLinks title="Guest information" links={guestLinks} />
 
-          {/* Center Section: Resort Brand */}
-          <div className="flex flex-col items-center text-center space-y-6">
-            <div className="flex flex-col items-center gap-3">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-resort-500/10 dark:bg-resort-500/20">
-                <svg className="h-10 w-10 text-resort-600 dark:text-resort-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-heading-lg font-semibold text-text-primary dark:text-dark-text-primary">{resortData.company}</p>
-                <p className="text-body-sm text-text-secondary dark:text-dark-text-secondary">A coastal sanctuary</p>
-              </div>
-            </div>
-
-            <address className="not-italic text-body-sm text-text-secondary dark:text-dark-text-secondary space-y-1">
-              <p>{address}</p>
-              <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-link inline-flex items-center gap-1">
-                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                </svg>
-                Find Us on Google Maps
-              </a>
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">Get in touch</h2>
+            <address className="mt-5 space-y-3 not-italic text-sm leading-6 text-white/75">
+              <p>{resortData.contact.address}</p>
+              <a href={`tel:${resortData.contact.phone.replace(/\D/g, '')}`} className="block transition hover:text-white">{resortData.contact.phone}</a>
+              <a href={`mailto:${resortData.contact.email}`} className="block transition hover:text-white">{resortData.contact.email}</a>
             </address>
-          </div>
-
-          {/* Center-Right Section: Social */}
-          <div className="space-y-4">
-            <h3 className="text-heading-sm font-semibold text-text-primary dark:text-dark-text-primary">Social</h3>
-            <div className="flex flex-col gap-3">
-              {socialItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-xl border border-border bg-surface-elevated transition hover:border-resort-500 hover:text-resort-600 hover:bg-resort-500/10 dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-secondary dark:hover:border-resort-400 dark:hover:text-resort-400 dark:hover:bg-resort-500/20"
-                  aria-label={item.label}
-                >
-                  {item.icon}
-                  <span className="text-body-sm text-text-secondary dark:text-dark-text-secondary">{item.label}</span>
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Right Section: Policies */}
-          <div className="space-y-4">
-            <h3 className="text-heading-sm font-semibold text-text-primary dark:text-dark-text-primary">Policies</h3>
-            <nav className="space-y-3">
-              {policyItems.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  className="block text-body-sm text-text-secondary transition hover:text-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <Link to="/#contact" className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-[#e1c49b] hover:text-white">
+              Contact our team <span aria-hidden="true">→</span>
+            </Link>
+            <a href="#chat" onClick={handleChatSupport} className="mt-3 block text-sm text-white/65 transition hover:text-white">
+              Chat with the concierge
+            </a>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-border dark:border-dark-border">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <p className="text-body-sm font-semibold text-text-primary dark:text-dark-text-primary">
-              {resortData.company}
-            </p>
-            <p className="text-body-sm text-text-secondary dark:text-dark-text-secondary">
-              © {new Date().getFullYear()} {resortData.company}. All rights reserved.
-            </p>
-            <div className="flex items-center gap-6 text-body-sm text-text-secondary dark:text-dark-text-secondary">
-              <Link to="/terms" className="hover:text-text-primary dark:hover:text-dark-text-primary transition">Terms</Link>
-              <Link to="/privacy" className="hover:text-text-primary dark:hover:text-dark-text-primary transition">Privacy</Link>
-              <Link to="/house-rules" className="hover:text-text-primary dark:hover:text-dark-text-primary transition">House Rules</Link>
-            </div>
-          </div>
+        <div className="flex flex-col gap-3 pt-6 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} {resortData.company}. All rights reserved.</p>
+          <p>Made for moments that matter.</p>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterLinks({ title, links }) {
+  return (
+    <nav aria-label={title}>
+      <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">{title}</h2>
+      <ul className="mt-5 space-y-3">
+        {links.map(([label, to]) => (
+          <li key={label}>
+            <Link to={to} className="text-sm text-white/75 transition hover:text-white">{label}</Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }

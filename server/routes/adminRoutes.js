@@ -5,6 +5,7 @@ import {
   adminMeController,
   createRole,
   createStaffAccount,
+  deleteBookingController,
   deleteRole,
   getAdminDashboardStats,
   getAuditLogs,
@@ -25,6 +26,11 @@ import {
   updateStaffAccount,
 } from '../controllers/adminController.js';
 import { listChatThreads, replyToChatThread } from '../controllers/chatController.js';
+import {
+  deleteNotificationController,
+  listNotificationsController,
+  markNotificationReadController,
+} from '../controllers/notificationController.js';
 import { requireAnyPermission, requireAuth, requireAnyRole, requirePermission } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -52,11 +58,15 @@ router.get('/permissions', requireAuth, requirePermission('roles.view'), listPer
 router.get('/bookings', requireAuth, requirePermission('bookings.view'), listAdminBookings);
 router.patch('/bookings/:id/status', requireAuth, requirePermission('bookings.confirm'), updateBookingStatus);
 router.get('/payments', requireAuth, requireAnyPermission(['bookings.view', 'reports.view']), listAdminPayments);
+router.delete('/bookings/:id', requireAuth, requirePermission('bookings.delete'), deleteBookingController);
 router.get('/availability', requireAuth, requirePermission('bookings.view'), listDateAvailability);
 router.patch('/availability', requireAuth, requirePermission('bookings.confirm'), updateDateAvailability);
 router.get('/inquiries', requireAuth, requirePermission('inquiries.view'), listInquiries);
 router.get('/chat', requireAuth, requirePermission('chat.view'), listChatThreads);
 router.post('/chat/:id/reply', requireAuth, requirePermission('chat.reply'), replyToChatThread);
 router.get('/settings', requireAuth, requirePermission('settings.view'), listSystemSettings);
+router.get('/notifications', requireAuth, requirePermission('notifications.view'), listNotificationsController);
+router.patch('/notifications/:id/read', requireAuth, requirePermission('notifications.view'), markNotificationReadController);
+router.delete('/notifications/:id', requireAuth, requirePermission('notifications.delete'), deleteNotificationController);
 
 export default router;

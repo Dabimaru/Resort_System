@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import Header from './components/Header';
@@ -18,6 +19,36 @@ import PrivacyPage from './pages/PrivacyPage';
 function RequireAuth({ children }) {
   const token = localStorage.getItem('azureCoveToken');
   return token ? children : <Navigate to="/auth" replace />;
+}
+
+// Scrolls to an in-page anchor when navigating to a hashed route (e.g. /#booking).
+// React Router v6 doesn't scroll to hash targets automatically, so this keeps
+// cross-page section navigation reliable without full page reloads.
+function HashScroller() {
+  const { hash, pathname } = useLocation();
+
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const target = hash.slice(1);
+    const element = document.getElementById(target);
+
+    if (!element) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [hash, pathname]);
+
+  return null;
 }
 
 function AppShell() {
@@ -52,6 +83,7 @@ function AppShell() {
         <Route path="/admin/profile" element={<AdminDashboardPage view="profile" />} />
         <Route path="*" element={<HomePage />} />
       </Routes>
+      <HashScroller />
       {!isAdminRoute && (
         <>
           <ChatWidget />

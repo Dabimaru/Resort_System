@@ -5,6 +5,7 @@ import {
   getUserBookings,
   submitBooking,
 } from '../services/api';
+import useLiveRefresh from '../hooks/useLiveRefresh';
 
 const MAX_GUESTS = 20;
 const PRESET_MAX = 10;
@@ -68,6 +69,10 @@ export default function MyBookingsPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useLiveRefresh(loadData, {
+    enabled: Boolean(localStorage.getItem('azureCoveToken')),
+  });
 
   // Deep links from the availability checker or a room card pre-fill the booking form.
   useEffect(() => {
@@ -163,7 +168,7 @@ export default function MyBookingsPage() {
         adults: Number(form.adults || 2),
         children: Number(form.children || 0),
         rooms: selectedRoomNames,
-      });
+      }, token);
 
       const booking = response?.data;
       setNotice({
@@ -319,7 +324,7 @@ export default function MyBookingsPage() {
                     {booking.status === 'processing' ? (
                       <div className="mt-5">
                         <Link to={`/checkout?bookingId=${booking.id}`} className="btn-primary">
-                          Complete payment
+                          Pay Now
                         </Link>
                       </div>
                     ) : null}

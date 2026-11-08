@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
-  getBooking,
   getUserBookings,
   processPayment,
   verifyPayment,
 } from '../services/api';
+import useLiveRefresh from '../hooks/useLiveRefresh';
 
 const DOWNPAYMENT_RATE = 0.5;
 
@@ -27,67 +27,66 @@ const formatDate = (value) => {
   return new Date(`${value}T00:00:00`).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-export default function CheckoutPage() {
-  const [searchParams] = useSearchParams();
-  const urlBookingId = searchParams.get('bookingId');
+const isPayable = (booking) => booking?.status === 'processing';
 
-  const [booking, setBooking] = useState(null);
-  const [loading, setLoading] = useState(Boolean(urlBookingId));
-  const [status, setStatus] = useState({ type: '', message: '' });
-  const [payment, setPayment] = useState(null);
-  const [processing, setProcessing] = useState(false);
-  const [form, setForm] = useState({
-    bookingId: urlBookingId || '',
-    method: 'gcash',
-    paymentType: 'downpayment',
-    customerEmail: '',
-  });
+export default function CheckoutPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlBookingId = searchParams.get('bookingId');
 
   const token = typeof window === 'undefined' ? null : localStorage.getItem('azureCoveToken');
   const isLoggedIn = Boolean(token);
 
-  useEffect(() => {
-    if (!urlBookingId) {
-      setLoading(false);
+  const [bookings, setBookings] = useState([]);
+  const [selectedId, setSelectedId] = useState(urlBookingId || '');
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [payment, setPayment] = useState(null);
+  const [processing, setProcessing] = useState(false);
+  const [form, setForm] = useState({ method: 'gcash', paymentType: 'downpayment' });
+
+  const refreshBookings = useCallback(async () => {
+    if (!token) {
       return;
     }
 
+    try {
+      const response = await getUserBookings(token);
+      setBookings(response?.bookings || []);
+    } catch (error) {
+      setStatus((current) => current.message
+        ? current
+        : { type: 'error', message: error.message || 'Unable to refresh your reservations.' });
+    }
+  }, [token]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await getBooking(urlBookingId, token);
+        const response = await getUserBookings(token);
         if (cancelled) return;
 
-        const found = response?.booking || null;
-        setBooking(found);
-        setForm((current) => ({
-          ...current,
-          bookingId: found?.id || urlBookingId,
-          customerEmail: found?.guestEmail || current.customerEmail,
-        }));
+        const list = response?.bookings || [];
+        setBookings(list);
+
+        // Prefer the reservation the guest arrived with, then anything already
+        // approved and awaiting payment, then the most recent reservation.
+        const initial = (urlBookingId && list.some((entry) => entry.id === urlBookingId) ? urlBookingId : '')
+          || list.find(isPayable)?.id
+          || list.find((entry) => entry.status !== 'approved' && entry.status !== 'cancelled')?.id
+          || list[0]?.id
+          || '';
+
+        setSelectedId(initial);
       } catch (error) {
-        if (cancelled) return;
-
-        // Fall back to the guest's own reservation list if the direct lookup fails.
-        try {
-          const fallback = await getUserBookings(token);
-          const found = (fallback?.bookings || []).find((entry) => entry.id === urlBookingId);
-          if (found && !cancelled) {
-            setBooking(found);
-            setForm((current) => ({
-              ...current,
-              bookingId: found.id,
-              customerEmail: found.guestEmail || current.customerEmail,
-            }));
-            return;
-          }
-        } catch (fallbackError) {
-          // Ignore and surface the original error below.
-        }
-
         if (!cancelled) {
-          setStatus({ type: 'error', message: error.message || 'Unable to load this reservation.' });
+          setStatus({ type: 'error', message: error.message || 'Unable to load your reservations.' });
         }
       } finally {
         if (!cancelled) {
@@ -101,7 +100,14 @@ export default function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [urlBookingId, token]);
+  }, [token, urlBookingId]);
+
+  useLiveRefresh(refreshBookings, { enabled: isLoggedIn });
+
+  const booking = useMemo(
+    () => bookings.find((entry) => entry.id === selectedId) || null,
+    [bookings, selectedId],
+  );
 
   const totalAmount = Number(booking?.totalAmount || 0);
   const amountPaid = Number(booking?.amountPaid || 0);
@@ -115,8 +121,13 @@ export default function CheckoutPage() {
     return Math.round(totalAmount * DOWNPAYMENT_RATE * 100) / 100;
   }, [form.paymentType, totalAmount, balance]);
 
-  const awaitingConfirmation = booking?.status === 'pending';
-  const alreadySettled = booking?.status === 'approved';
+  const handleSelect = (event) => {
+    const nextId = event.target.value;
+    setSelectedId(nextId);
+    setStatus({ type: '', message: '' });
+    setPayment(null);
+    setSearchParams(nextId ? { bookingId: nextId } : {}, { replace: true });
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -126,8 +137,8 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!form.bookingId) {
-      setStatus({ type: 'error', message: 'A reservation reference is required before payment.' });
+    if (!booking) {
+      setStatus({ type: 'error', message: 'Choose a reservation before paying.' });
       return;
     }
 
@@ -136,11 +147,11 @@ export default function CheckoutPage() {
 
     try {
       const initiated = await processPayment({
-        bookingId: form.bookingId,
+        bookingId: booking.id,
         amount: amountDue,
         method: form.method,
         paymentType: form.paymentType,
-        customerEmail: form.customerEmail,
+        customerEmail: booking.guestEmail || '',
       });
 
       const settled = await verifyPayment({
@@ -154,9 +165,9 @@ export default function CheckoutPage() {
         message: `Payment successful. Reference: ${settled.payment.paymentReference}`,
       });
 
-      const refreshed = await getBooking(form.bookingId, token).catch(() => null);
-      if (refreshed?.booking) {
-        setBooking(refreshed.booking);
+      const refreshed = await getUserBookings(token).catch(() => null);
+      if (refreshed?.bookings) {
+        setBookings(refreshed.bookings);
       }
     } catch (error) {
       setStatus({ type: 'error', message: error.message || 'Payment failed.' });
@@ -168,10 +179,12 @@ export default function CheckoutPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface px-4 py-20 text-center text-text-primary dark:bg-dark-surface dark:text-dark-text-primary">
-        <div className="section-shell">Loading your reservation...</div>
+        <div className="section-shell">Loading your reservations...</div>
       </div>
     );
   }
+
+  const payable = isPayable(booking);
 
   return (
     <div className="min-h-screen bg-surface px-4 py-12 text-text-primary dark:bg-dark-surface dark:text-dark-text-primary">
@@ -226,93 +239,83 @@ export default function CheckoutPage() {
         <form onSubmit={handleSubmit} className="card-surface-elevated p-8">
           <h2 className="text-heading-md">Payment details</h2>
 
-          {!urlBookingId ? (
+          {bookings.length === 0 ? (
             <div className="mt-6 rounded-2xl border border-state-warning/30 bg-state-warning/10 p-4 text-body-sm text-state-warning">
-              Choose a reservation from <Link to="/my-bookings" className="underline">My Bookings</Link> to continue with payment.
+              You have no reservations yet. Create one from <Link to="/my-bookings" className="underline">My Bookings</Link> first.
             </div>
-          ) : null}
+          ) : (
+            <div className="mt-6 space-y-5">
+              <div className="form-group">
+                <label className="form-label" htmlFor="bookingId">Reservation reference</label>
+                <select
+                  id="bookingId"
+                  name="bookingId"
+                  value={selectedId}
+                  onChange={handleSelect}
+                  className="form-select font-mono"
+                >
+                  <option value="">Select a reservation</option>
+                  {bookings.map((entry) => (
+                    <option key={entry.id} value={entry.id}>
+                      {entry.bookingReference} · {(entry.rooms || []).map((room) => room.name).join(' + ') || entry.suite} · {entry.status}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          {awaitingConfirmation ? (
-            <div className="mt-6 rounded-2xl border border-state-warning/30 bg-state-warning/10 p-4 text-body-sm text-state-warning">
-              This reservation is still pending confirmation. Payment opens as soon as our team approves your stay.
-            </div>
-          ) : null}
+              {booking && !payable ? (
+                <div className={`rounded-2xl border p-4 text-body-sm ${booking.status === 'approved' ? 'border-state-success/30 bg-state-success/10 text-state-success' : booking.status === 'cancelled' ? 'border-state-error/30 bg-state-error/10 text-state-error' : 'border-state-warning/30 bg-state-warning/10 text-state-warning'}`}>
+                  {booking.status === 'approved'
+                    ? 'This reservation is already settled.'
+                    : booking.status === 'cancelled'
+                      ? 'This reservation was cancelled.'
+                      : 'This reservation is still pending confirmation. Payment opens once our team approves your stay.'}
+                </div>
+              ) : null}
 
-          {alreadySettled && !payment ? (
-            <div className="mt-6 rounded-2xl border border-state-success/30 bg-state-success/10 p-4 text-body-sm text-state-success">
-              This reservation is already approved and settled.
-            </div>
-          ) : null}
+              <div className="form-group">
+                <label className="form-label" htmlFor="paymentType">Payment type</label>
+                <select
+                  id="paymentType"
+                  name="paymentType"
+                  value={form.paymentType}
+                  onChange={(event) => setForm((current) => ({ ...current, paymentType: event.target.value }))}
+                  className="form-select"
+                >
+                  {paymentTypes.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
 
-          <div className="mt-6 space-y-5">
-            <div className="form-group">
-              <label className="form-label" htmlFor="bookingId">Reservation reference</label>
-              <input
-                type="text"
-                id="bookingId"
-                name="bookingId"
-                value={form.bookingId}
-                onChange={(event) => setForm((current) => ({ ...current, bookingId: event.target.value }))}
-                className="form-input font-mono"
-                placeholder="AZ-XXXXXX"
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="amount">Amount due</label>
+                <input
+                  type="text"
+                  id="amount"
+                  name="amount"
+                  value={currency(amountDue)}
+                  className="form-input"
+                  readOnly
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="paymentType">Payment type</label>
-              <select
-                id="paymentType"
-                name="paymentType"
-                value={form.paymentType}
-                onChange={(event) => setForm((current) => ({ ...current, paymentType: event.target.value }))}
-                className="form-select"
-              >
-                {paymentTypes.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+              <div className="form-group">
+                <label className="form-label" htmlFor="method">Payment method</label>
+                <select
+                  id="method"
+                  name="method"
+                  value={form.method}
+                  onChange={(event) => setForm((current) => ({ ...current, method: event.target.value }))}
+                  className="form-select"
+                >
+                  {paymentMethods.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="amount">Amount due</label>
-              <input
-                type="text"
-                id="amount"
-                name="amount"
-                value={currency(amountDue)}
-                className="form-input"
-                readOnly
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="method">Payment method</label>
-              <select
-                id="method"
-                name="method"
-                value={form.method}
-                onChange={(event) => setForm((current) => ({ ...current, method: event.target.value }))}
-                className="form-select"
-              >
-                {paymentMethods.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="customerEmail">Customer email</label>
-              <input
-                type="email"
-                id="customerEmail"
-                name="customerEmail"
-                value={form.customerEmail}
-                onChange={(event) => setForm((current) => ({ ...current, customerEmail: event.target.value }))}
-                className="form-input"
-                placeholder="you@example.com"
-              />
-            </div>
-          </div>
+          )}
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             {!isLoggedIn ? (
@@ -322,7 +325,7 @@ export default function CheckoutPage() {
             ) : (
               <button
                 type="submit"
-                disabled={processing || awaitingConfirmation || alreadySettled || !form.bookingId}
+                disabled={processing || !booking || !payable || Boolean(payment)}
                 className="btn-primary flex-1"
               >
                 {processing ? 'Processing...' : `Pay ${currency(amountDue)}`}

@@ -1,19 +1,27 @@
 import crypto from 'crypto';
-import { mockBookings, mockPayments, recordAuditLog } from '../data/mockStore.js';
-import { createReservationNotification } from './notificationService.js';
+import { recordAuditLog } from '../data/mockStore.js';
+import { createPayment, listBookings, listPayments, markPaymentPaid, updateBooking } from './supabaseRepository.js';
+import { createPaymentNotification } from './notificationService.js';
 
 export const allowedMethods = ['cash', 'gcash', 'qr_ph'];
 export const allowedPaymentTypes = ['downpayment', 'full'];
 export const DOWNPAYMENT_RATE = 0.5;
 
-const findBooking = (bookingId) =>
-  mockBookings.find((entry) => entry.id === bookingId || entry.bookingReference === bookingId) || null;
+const resolveBooking = async (bookingId) => {
+  if (!bookingId) {
+    return null;
+  }
 
-export const listPayments = () =>
-  [...mockPayments].sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
+  const bookings = await listBookings();
+  return bookings.find((entry) => entry.id === bookingId || entry.bookingReference === bookingId) || null;
+};
 
-export const getPaymentsForBooking = (bookingId) =>
-  mockPayments.filter((payment) => payment.bookingId === bookingId || payment.bookingReference === bookingId);
+export const getPayments = async () => listPayments();
+
+export const getPaymentsForBooking = async (bookingId) => {
+  const payments = await listPayments();
+  return payments.filter((payment) => payment.bookingId === bookingId || payment.bookingReference === bookingId);
+};
 
 // The guest only ever owes half up front unless they choose to settle in full.
 export const calculatePaymentAmount = (booking, paymentType = 'downpayment') => {
@@ -26,7 +34,7 @@ export const calculatePaymentAmount = (booking, paymentType = 'downpayment') => 
   return Math.round(amount * 100) / 100;
 };
 
-export const processReservationPayment = ({
+export const processReservationPayment = async ({
   bookingId,
   amount,
   method = 'cash',
@@ -52,7 +60,7 @@ export const processReservationPayment = ({
     throw error;
   }
 
-  const booking = findBooking(bookingId);
+  const booking = await resolveBooking(bookingId);
 
   if (booking?.status === 'cancelled') {
     const error = new Error('This reservation was cancelled and can no longer be paid.');
@@ -76,11 +84,10 @@ export const processReservationPayment = ({
     throw error;
   }
 
-  const payment = {
+  const paymentRecord = {
     id: crypto.randomUUID(),
     bookingId: booking?.id || bookingId,
     bookingReference: booking?.bookingReference || bookingId,
-    bookingStatusBeforePayment: booking?.status || null,
     paymentReference: `PAY-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
     amount: normalizedAmount,
     totalAmount: booking?.totalAmount || null,
@@ -94,19 +101,21 @@ export const processReservationPayment = ({
     createdAt: new Date().toISOString(),
   };
 
-  mockPayments.push(payment);
-  return payment;
+  return createPayment(paymentRecord);
 };
 
-export const verifyReservationPayment = ({ paymentId, verificationCode, actor = 'guest' }) => {
-  const payment = mockPayments.find(
-    (entry) => entry.id === paymentId || entry.paymentReference === paymentId,
-  );
+export const verifyReservationPayment = async ({ paymentId, verificationCode, actor = 'guest' }) => {
+  const payments = await listPayments();
+  const payment = payments.find((entry) => entry.id === paymentId || entry.paymentReference === paymentId);
 
   if (!payment) {
     const error = new Error('Payment record not found.');
     error.status = 404;
     throw error;
+  }
+
+  if (payment.status === 'paid') {
+    return payment;
   }
 
   if (!verificationCode) {
@@ -123,34 +132,32 @@ export const verifyReservationPayment = ({ paymentId, verificationCode, actor = 
   }
 
   const timestamp = new Date().toISOString();
-  payment.status = 'paid';
-  payment.paidAt = timestamp;
-  payment.updatedAt = timestamp;
+  const settled = await markPaymentPaid(payment.id, timestamp);
 
   // Settling the payment is what moves a reservation from Processing to Approved.
-  const booking = findBooking(payment.bookingId);
-  if (booking && booking.status !== 'cancelled') {
-    booking.paymentStatus = payment.paymentType === 'full' ? 'paid' : 'partial';
-    booking.paymentType = payment.paymentType;
-    booking.amountPaid = Math.round(((booking.amountPaid || 0) + payment.amount) * 100) / 100;
-    booking.balanceDue = Math.max(0, Math.round((booking.totalAmount - booking.amountPaid) * 100) / 100);
-    booking.paymentReference = payment.paymentReference;
-    booking.status = 'approved';
-    booking.approvedAt = timestamp;
-    booking.updatedAt = timestamp;
-    booking.payments = [
-      ...(booking.payments || []),
-      {
-        paymentReference: payment.paymentReference,
-        amount: payment.amount,
-        method: payment.method,
-        paymentType: payment.paymentType,
-        status: 'paid',
-        paidAt: timestamp,
-      },
-    ];
+  const booking = await resolveBooking(payment.bookingId);
 
-    payment.bookingReference = booking.bookingReference;
+  if (booking && booking.status !== 'cancelled') {
+    const amountPaid = Math.round(((Number(booking.amountPaid) || 0) + Number(payment.amount)) * 100) / 100;
+    const paymentEntry = {
+      paymentReference: payment.paymentReference,
+      amount: payment.amount,
+      method: payment.method,
+      paymentType: payment.paymentType,
+      status: 'paid',
+      paidAt: timestamp,
+    };
+
+    const updatedBooking = await updateBooking(booking.id, {
+      status: 'approved',
+      paymentStatus: payment.paymentType === 'full' ? 'paid' : 'partial',
+      paymentType: payment.paymentType,
+      paymentReference: payment.paymentReference,
+      amountPaid,
+      payments: [...(booking.payments || []), paymentEntry],
+      completedAt: timestamp,
+      updatedAt: timestamp,
+    });
 
     recordAuditLog({
       actorId: booking.userId || 'guest',
@@ -167,8 +174,8 @@ export const verifyReservationPayment = ({ paymentId, verificationCode, actor = 
       },
     });
 
-    createReservationNotification({ booking, status: 'approved', actor });
   }
 
-  return payment;
+  await createPaymentNotification({ payment: settled || payment, booking, actor });
+  return settled || payment;
 };

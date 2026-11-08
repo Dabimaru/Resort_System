@@ -1,19 +1,20 @@
 import express from 'express';
 import {
   checkAvailability,
-  createBooking,
+  createBookingController,
   getBookingById,
   getUserBookings,
-  listBookings,
+  listBookingsController,
 } from '../controllers/bookingController.js';
-import { optionalAuth, requireAuth } from '../middleware/authMiddleware.js';
+import { optionalAuth, requireAuth, requirePermission } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 router.get('/availability', checkAvailability);
 router.get('/my', requireAuth, getUserBookings);
-router.get('/:id', getBookingById);
-router.get('/', listBookings);
-router.post('/', optionalAuth, createBooking);
+router.get('/:id', requireAuth, getBookingById);
+// Reading the full reservation list is an admin view, not a guest one.
+router.get('/', requireAuth, requirePermission('bookings.view'), listBookingsController);
+router.post('/', optionalAuth, createBookingController);
 
 export default router;

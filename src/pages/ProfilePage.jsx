@@ -1,31 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getUserProfile } from '../services/api';
+import useLiveRefresh from '../hooks/useLiveRefresh';
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      const token = localStorage.getItem('azureCoveToken');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+  const loadProfile = useCallback(async () => {
+    const token = localStorage.getItem('azureCoveToken');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const response = await getUserProfile(token);
-        setUser(response?.user || null);
-      } catch (err) {
-        setError(err.message || 'Unable to load profile.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProfile();
+    try {
+      const response = await getUserProfile(token);
+      setUser(response?.user || null);
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Unable to load profile.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  useLiveRefresh(loadProfile, {
+    enabled: Boolean(localStorage.getItem('azureCoveToken')),
+  });
 
   if (loading) {
     return (

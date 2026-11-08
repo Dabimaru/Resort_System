@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { app } from '../server/server.js';
+import { listNotifications } from '../server/services/notificationService.js';
 
 const startServer = async () => {
   const server = app.listen(0, '127.0.0.1');
@@ -67,6 +68,10 @@ test('inquiry endpoint accepts valid payload', async () => {
     assert.equal(response.status, 201);
     assert.equal(data.message, 'Inquiry submitted successfully.');
     assert.match(data.data.inquiryReference, /^INQ-/i);
+    const notifications = await listNotifications();
+    const inquiryNotification = notifications.find((entry) => entry.details.inquiryReference === data.data.inquiryReference);
+    assert.ok(inquiryNotification, 'Expected a notification for the new inquiry.');
+    assert.equal(inquiryNotification.details.email, 'maria@example.com');
   } finally {
     server.close();
   }

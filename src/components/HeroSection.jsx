@@ -1,106 +1,55 @@
+import { Link } from 'react-router-dom';
 import { resortData } from '../data/resortData';
 
 export default function HeroSection() {
-  const scrollToBooking = (event) => {
-    event.preventDefault();
-    const bookingSection = document.getElementById('booking');
-    if (bookingSection) {
-      bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   return (
-    <section id="stay" className="relative isolate overflow-hidden bg-surface dark:bg-dark-surface">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=80')",
-        }}
+    <section id="stay" className="relative isolate flex min-h-[650px] items-center overflow-hidden bg-resort-950 text-white md:min-h-[740px]">
+      <img
+        src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2200&q=88"
+        alt="Quiet shoreline and turquoise water at Azure Cove"
+        loading="eager"
+        className="absolute inset-0 h-full w-full object-cover"
       />
-      <div className="absolute inset-0 bg-hero-gradient dark:bg-dark-hero-gradient" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#0b211d]/85 via-[#0b211d]/55 to-[#0b211d]/10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0b211d]/45 via-transparent to-[#0b211d]/10" />
 
-      <div className="section-shell relative grid min-h-[720px] items-center gap-10 py-20 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="max-w-2xl">
-          <span className="inline-flex rounded-full border border-resort-500/30 bg-resort-500/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.22em] text-resort-600 dark:border-resort-500/30 dark:bg-resort-500/20 dark:text-resort-400">
-            Coastal luxury stays
-          </span>
-          <h1 className="mt-6 text-5xl font-semibold tracking-tight text-text-primary dark:text-dark-text-primary md:text-6xl">
-            Escape to your own private horizon.
+      <div className="section-shell relative w-full pb-20 pt-24 md:pb-28 md:pt-28">
+        <div className="max-w-3xl">
+          <p className="mb-6 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/80">
+            <span className="h-px w-9 bg-white/70" />
+            {resortData.contact?.address || 'A quiet stretch of the coast'}
+          </p>
+          <h1 className="max-w-3xl font-display text-6xl font-medium leading-[0.94] tracking-tight text-white sm:text-7xl md:text-8xl">
+            A slower kind
+            <br />
+            of <span className="italic text-[#e1c49b]">escape.</span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg text-text-secondary dark:text-dark-text-secondary md:text-xl">
+          <p className="mt-7 max-w-xl text-base leading-7 text-white/80 md:text-lg md:leading-8">
             {resortData.tagline}
           </p>
 
-          <div className="mt-10 flex flex-wrap gap-4">
-            <a
-              href="#booking"
-              onClick={scrollToBooking}
-              className="rounded-full bg-resort-500 px-7 py-3.5 text-sm font-semibold text-text-inverse transition hover:bg-resort-400"
-            >
-              Reserve a stay
-            </a>
-            <a
-              href="#gallery"
-              className="rounded-full border border-border bg-surface-elevated/80 px-7 py-3.5 text-sm font-semibold text-text-primary transition hover:border-border-strong hover:bg-surface-overlay dark:border-dark-border dark:bg-dark-surface-elevated/80 dark:text-dark-text-primary dark:hover:border-dark-border-strong dark:hover:bg-dark-surface-overlay"
-            >
-              View gallery
-            </a>
-          </div>
-
-          <div className="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-4">
-            {resortData.stats.map((stat) => (
-              <div key={stat.label} className="rounded-2xl border border-border bg-surface-elevated/80 p-4 backdrop-blur-sm dark:border-dark-border dark:bg-dark-surface-elevated/80">
-                <div className="text-2xl font-semibold text-text-primary dark:text-dark-text-primary">{stat.value}</div>
-                <div className="mt-2 text-xs uppercase tracking-[0.16em] text-text-muted dark:text-dark-text-muted">{stat.label}</div>
-              </div>
-            ))}
+          <div className="mt-9 flex flex-wrap items-center gap-4">
+            <Link to="/#booking" className="inline-flex min-h-12 items-center gap-3 rounded-md bg-[#f0dfc2] px-6 text-sm font-semibold text-[#183a32] transition hover:bg-white">
+              Plan your stay
+              <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
+                <path d="M3.5 10h12m-5-5 5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+            <Link to="/#suites" className="inline-flex min-h-12 items-center rounded-md border border-white/45 px-6 text-sm font-medium text-white transition hover:border-white hover:bg-white/10">
+              Explore the suites
+            </Link>
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-border bg-surface-elevated/80 p-6 shadow-glow backdrop-blur-xl dark:border-dark-border dark:bg-dark-surface-elevated/80">
-          <div className="rounded-[1.5rem] bg-surface p-5 dark:bg-dark-surface">
-            <div className="flex items-center justify-between">
-              <p className="text-sm uppercase tracking-[0.22em] text-text-muted dark:text-dark-text-muted">Featured stay</p>
-              <span className="rounded-full bg-state-success/20 px-2 py-1 text-xs font-medium text-state-success dark:bg-state-success/20 dark:text-state-success">
-                Available now
-              </span>
-            </div>
-
-            <img
-              src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80"
-              alt="Luxury resort room"
-              className="mt-5 h-56 w-full rounded-2xl object-cover"
-            />
-
-            <div className="mt-6 flex items-end justify-between">
-              <div>
-                <div className="text-sm uppercase tracking-[0.18em] text-text-muted dark:text-dark-text-muted">Laguna Suite</div>
-                <div className="mt-2 text-3xl font-semibold text-text-primary dark:text-dark-text-primary">$420<span className="text-base text-text-muted dark:text-dark-text-muted"> / night</span></div>
-              </div>
-              <a
-                href="#booking"
-                onClick={scrollToBooking}
-                className="rounded-full bg-resort-500 px-4 py-2 text-sm font-medium text-text-inverse hover:bg-resort-400"
-              >
-                Book
-              </a>
-            </div>
-
-            <div className="mt-6 space-y-3 text-sm text-text-secondary dark:text-dark-text-secondary">
-              <div className="flex items-center justify-between border-b border-border pb-2 dark:border-dark-border">
-                <span>Check in</span>
-                <span className="text-text-primary dark:text-dark-text-primary">Fri, 20 Dec</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-border pb-2 dark:border-dark-border">
-                <span>Check out</span>
-                <span className="text-text-primary dark:text-dark-text-primary">Sun, 22 Dec</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Guests</span>
-                <span className="text-text-primary dark:text-dark-text-primary">2 Adults</span>
-              </div>
-            </div>
+        <div className="mt-20 flex flex-col gap-5 border-t border-white/25 pt-5 text-sm text-white/80 sm:flex-row sm:items-center sm:justify-between">
+          <p className="max-w-sm">{resortData.company} <span className="mx-2 text-white/40">/</span> An intimate coastal retreat</p>
+          <div className="flex flex-wrap gap-x-8 gap-y-2">
+            {resortData.stats.slice(0, 3).map((stat) => (
+              <p key={stat.label}>
+                <span className="mr-2 font-semibold text-white">{stat.value}</span>
+                <span className="text-white/65">{stat.label}</span>
+              </p>
+            ))}
           </div>
         </div>
       </div>

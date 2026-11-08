@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCustomerChatThread, sendCustomerChatMessage } from '../services/api';
+import useLiveRefresh from '../hooks/useLiveRefresh';
 
 const defaultGreeting = [
   {
@@ -38,6 +39,10 @@ export default function ChatWidget() {
   useEffect(() => {
     loadThread();
   }, []);
+
+  useLiveRefresh(loadThread, {
+    enabled: isOpen && Boolean(localStorage.getItem('azureCoveToken')),
+  });
 
   const ensureAccount = () => {
     const token = localStorage.getItem('azureCoveToken');
@@ -86,7 +91,7 @@ export default function ChatWidget() {
   return (
     <div className="fixed bottom-5 left-5 z-50 flex flex-col items-start">
       {isOpen && (
-        <div className="mb-3 w-[340px] overflow-hidden rounded-3xl border border-border bg-surface-elevated shadow-elevation-4 dark:border-dark-border dark:bg-dark-surface-elevated">
+        <div className="mb-3 w-[calc(100vw-2.5rem)] max-w-[340px] overflow-hidden rounded-xl border border-border bg-surface-elevated shadow-elevation-4 dark:border-dark-border dark:bg-dark-surface-elevated">
           <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 dark:border-dark-border dark:bg-dark-surface">
             <div>
               <p className="text-body-sm font-semibold text-text-primary dark:text-dark-text-primary">Support</p>

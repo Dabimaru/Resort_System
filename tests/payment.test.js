@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { app } from '../server/server.js';
+import { listNotifications } from '../server/services/notificationService.js';
 
 const startServer = async () => {
   const server = app.listen(0, '127.0.0.1');
@@ -27,6 +28,10 @@ test('payment processing creates a mock payment record with a verification code'
 
     const bookingPayload = await bookingResponse.json();
     assert.equal(bookingResponse.status, 201);
+    const notifications = await listNotifications();
+    const bookingNotification = notifications.find((entry) => entry.details.bookingReference === bookingPayload.data.bookingReference);
+    assert.ok(bookingNotification, 'Expected a notification for the new booking.');
+    assert.equal(bookingNotification.details.guestEmail, '');
 
     const paymentResponse = await fetch(`http://127.0.0.1:${address.port}/api/payments/process`, {
       method: 'POST',
@@ -80,6 +85,10 @@ test('payment verification completes an authorized mock payment', async () => {
     const verifyPayload = await verifyResponse.json();
     assert.equal(verifyResponse.status, 200);
     assert.equal(verifyPayload.payment.status, 'paid');
+    const notifications = await listNotifications();
+    const paymentNotification = notifications.find((entry) => entry.details.paymentReference === verifyPayload.payment.paymentReference);
+    assert.ok(paymentNotification, 'Expected a notification for the successful payment.');
+    assert.equal(paymentNotification.details.amount, verifyPayload.payment.amount);
   } finally {
     server.close();
   }
