@@ -35,6 +35,24 @@ test('super admin can log in and view protected dashboard stats', async () => {
     assert.equal(dashboardResponse.status, 200);
     assert.ok(dashboardData.stats.totalBookings >= 0);
     assert.ok(dashboardData.stats.activeStaff >= 1);
+
+    const meResponse = await fetch(`http://127.0.0.1:${address.port}/api/admin/auth/me`, {
+      headers: { Authorization: `Bearer ${loginData.token}` },
+    });
+    const meData = await meResponse.json();
+    assert.equal(meResponse.status, 200);
+    assert.equal(meData.user.id, loginData.user.id);
+
+    const logoutResponse = await fetch(`http://127.0.0.1:${address.port}/api/admin/auth/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${loginData.token}` },
+    });
+    assert.equal(logoutResponse.status, 200);
+
+    const expiredTokenResponse = await fetch(`http://127.0.0.1:${address.port}/api/admin/dashboard/stats`, {
+      headers: { Authorization: `Bearer ${loginData.token}` },
+    });
+    assert.equal(expiredTokenResponse.status, 401);
   } finally {
     server.close();
   }

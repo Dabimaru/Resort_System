@@ -42,6 +42,19 @@ alter table staff_accounts enable row level security;
 create unique index if not exists idx_staff_accounts_email_unique on staff_accounts(lower(email));
 create unique index if not exists idx_staff_accounts_username_unique on staff_accounts(lower(username));
 
+create table if not exists auth_sessions (
+  token_hash text primary key,
+  account_id text not null,
+  account_type text not null check (account_type in ('customer', 'staff', 'mock')),
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now(),
+  revoked_at timestamptz
+);
+
+alter table auth_sessions enable row level security;
+create index if not exists idx_auth_sessions_account on auth_sessions(account_type, account_id);
+create index if not exists idx_auth_sessions_expiry on auth_sessions(expires_at);
+
 create table if not exists bookings (
   id uuid primary key default uuid_generate_v4(),
   property_id uuid references properties(id) on delete cascade,
