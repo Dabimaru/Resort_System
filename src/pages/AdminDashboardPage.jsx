@@ -70,6 +70,87 @@ const statusBadgeClass = (status) => {
   }
 };
 
+const notificationDetailLabel = (key) => ({
+  actor: 'Paid by',
+  amount: 'Payment amount',
+  amountPaid: 'Total paid',
+  balanceDue: 'Balance due',
+  bookingReference: 'Booking ID Reference',
+  customerEmail: 'Guest email',
+  guestName: 'Guest name',
+  method: 'Payment method',
+  paymentReference: 'Payment Reference Number',
+  paymentType: 'Payment type',
+  rooms: 'Room details',
+  totalAmount: 'Booking total',
+}[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, (letter) => letter.toUpperCase()));
+
+const notificationDetailText = (key, value) => {
+  if (value === null || value === undefined || value === '') return '—';
+  if (['amount', 'amountPaid', 'balanceDue', 'price', 'totalAmount'].includes(key)) {
+    return `$${Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  }
+  if (['paidAt', 'sentAt', 'createdAt'].includes(key) && !Number.isNaN(Date.parse(value))) {
+    return new Date(value).toLocaleString();
+  }
+  if (key === 'actor') {
+    return String(value).replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+  if (key === 'method') {
+    return String(value).toLowerCase() === 'gcash' ? 'GCash' : String(value).replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+  if (key === 'paymentType') {
+    return String(value) === 'full' ? 'Full payment' : 'Downpayment';
+  }
+  if (Array.isArray(value)) return value.map((entry) => String(entry)).join(', ');
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  return String(value).replace(/[_-]+/g, ' ');
+};
+
+const hasSettledBookingPayment = (booking) => (
+  Number(booking?.amountPaid || 0) > 0
+  || ['partial', 'paid'].includes(booking?.paymentStatus)
+  || booking?.payments?.some((payment) => payment.status === 'paid')
+);
+
+function NotificationDetailValue({ name, value }) {
+  if (name === 'rooms' && Array.isArray(value)) {
+    if (value.length === 0) return <span>—</span>;
+    return (
+      <ul className="space-y-2">
+        {value.map((room, index) => (
+          <li key={room.id || `${room.name || 'room'}-${index}`} className="rounded-lg bg-surface-overlay p-2 dark:bg-dark-surface-overlay">
+            <p className="font-medium">{room.name || 'Resort room'}</p>
+            <p className="mt-1 text-xs text-text-muted dark:text-dark-text-muted">
+              {[room.type, room.capacity ? `Sleeps ${room.capacity}` : '', room.price != null ? `$${Number(room.price).toLocaleString(undefined, { maximumFractionDigits: 2 })}/night` : '']
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+            {Array.isArray(room.amenities) && room.amenities.length > 0 && (
+              <p className="mt-1 text-xs text-text-muted dark:text-dark-text-muted">{room.amenities.join(' · ')}</p>
+            )}
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  if (Array.isArray(value)) return <span>{notificationDetailText(name, value)}</span>;
+  if (value && typeof value === 'object') {
+    return (
+      <dl className="space-y-1">
+        {Object.entries(value).map(([key, item]) => (
+          <div key={key}>
+            <dt className="inline font-medium">{notificationDetailLabel(key)}: </dt>
+            <dd className="inline">{notificationDetailText(key, item)}</dd>
+          </div>
+        ))}
+      </dl>
+    );
+  }
+  return <span>{notificationDetailText(name, value)}</span>;
+}
+
 export default function AdminDashboardPage({ view = 'dashboard' }) {
   const location = useLocation();
   const currentView = useMemo(() => {
@@ -311,7 +392,8 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
 
   const handleCreateStaff = async (event) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const payload = {
       fullName: form.get('fullName'),
       username: form.get('username'),
@@ -323,7 +405,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
 
     try {
       await createAdminStaff(payload, token);
-      event.currentTarget.reset();
+      formElement.reset();
       await fetchAdminState();
     } catch (err) {
       setError(err.message || 'Unable to create staff account.');
@@ -332,7 +414,8 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
 
   const handleCreateRole = async (event) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const payload = {
       name: form.get('roleName'),
       description: form.get('description'),
@@ -340,7 +423,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
 
     try {
       await createAdminRole(payload, token);
-      event.currentTarget.reset();
+      formElement.reset();
       await fetchAdminState();
     } catch (err) {
       setError(err.message || 'Unable to create role.');
@@ -735,13 +818,14 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                     <p className="mt-1 text-xs text-text-muted dark:text-dark-text-muted">
                       {booking.arrival} to {booking.departure}
                     </p>
-                    <p className="mt-1 text-xs text-text-muted dark:text-dark-text-muted">Ref: {booking.bookingReference || booking.id}</p>
+                    <p className="mt-1 text-xs text-text-muted dark:text-dark-text-muted">Booking ID Reference: {booking.bookingReference || 'Unavailable'}</p>
                     <button
                       type="button"
-                      onClick={() => handleStatusUpdate(booking.id, booking.status === 'processing' ? 'pending' : 'processing')}
+                      onClick={() => handleStatusUpdate(booking.id, 'processing')}
+                      disabled={booking.status !== 'pending' || hasSettledBookingPayment(booking)}
                       className="mt-3 rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-text-inverse hover:bg-emerald-400"
                     >
-                      {booking.status === 'processing' ? 'Move back to pending' : 'Approve reservation'}
+                      {booking.status === 'pending' ? 'Approve reservation' : booking.status === 'processing' ? 'Approved for payment' : 'Payment received'}
                     </button>
                   </div>
                 ))}
@@ -798,7 +882,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
           <table className="min-w-full text-left text-sm">
             <thead className="text-text-muted dark:text-dark-text-muted">
               <tr>
-                <th className="pb-3 pr-4">Reference</th>
+                <th className="pb-3 pr-4">Booking ID Reference</th>
                 <th className="pb-3 pr-4">Guest</th>
                 <th className="pb-3 pr-4">Room</th>
                 <th className="pb-3 pr-4">Dates</th>
@@ -810,7 +894,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
             <tbody>
               {normalizedBookings.map((booking) => (
                 <tr key={booking.id} className="border-t border-border text-text-primary dark:text-dark-text-primary dark:border-dark-border">
-                  <td className="py-3 pr-4 font-mono text-xs">{booking.bookingReference || booking.id}</td>
+                  <td className="py-3 pr-4 font-mono text-xs">{booking.bookingReference || 'Unavailable'}</td>
                   <td className="py-3 pr-4">{booking.guestName || 'Guest'}</td>
                   <td className="py-3 pr-4">{booking.suite}</td>
                   <td className="py-3 pr-4">{booking.arrival} → {booking.departure}</td>
@@ -833,9 +917,25 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                   </td>
                   <td className="py-3">
                     <div className="flex flex-wrap gap-2">
-                      <button type="button" onClick={() => handleStatusUpdate(booking.id, 'processing')} className="rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-medium text-text-inverse">Approve</button>
-                      <button type="button" onClick={() => handleStatusUpdate(booking.id, 'cancelled')} className="rounded-full border border-state-error/40 bg-state-error/10 px-3 py-1.5 text-xs text-state-error hover:bg-state-error/20">Cancel</button>
-                      <button type="button" onClick={() => handleDeleteBooking(booking.id)} className="rounded-full border border-state-error/40 bg-state-error/10 px-3 py-1.5 text-xs text-state-error hover:bg-state-error/20">Delete</button>
+                      {booking.status === 'pending' && (
+                        <button type="button" onClick={() => handleStatusUpdate(booking.id, 'processing')} className="rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-medium text-text-inverse">Approve</button>
+                      )}
+                      {booking.status !== 'approved' && (
+                        <button
+                          type="button"
+                          onClick={() => handleStatusUpdate(booking.id, 'cancelled')}
+                            disabled={hasSettledBookingPayment(booking)}
+                            title={hasSettledBookingPayment(booking) ? 'A paid reservation cannot be cancelled.' : undefined}
+                          className="rounded-full border border-state-error/40 bg-state-error/10 px-3 py-1.5 text-xs text-state-error hover:bg-state-error/20 disabled:cursor-not-allowed disabled:opacity-50"
+                        >Cancel</button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteBooking(booking.id)}
+                          disabled={hasSettledBookingPayment(booking)}
+                          title={hasSettledBookingPayment(booking) ? 'A paid reservation cannot be deleted.' : undefined}
+                        className="rounded-full border border-state-error/40 bg-state-error/10 px-3 py-1.5 text-xs text-state-error hover:bg-state-error/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      >Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -858,7 +958,7 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
             <table className="min-w-full text-left text-sm">
               <thead className="text-text-muted dark:text-dark-text-muted">
                 <tr>
-                  <th className="pb-3 pr-4">Payment reference</th>
+                  <th className="pb-3 pr-4">Payment Reference Number</th>
                   <th className="pb-3 pr-4">Reservation</th>
                   <th className="pb-3 pr-4">Guest</th>
                   <th className="pb-3 pr-4">Type</th>
@@ -870,15 +970,15 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
               <tbody>
                 {payments.map((payment) => (
                   <tr key={payment.id} className="border-t border-border dark:border-dark-border">
-                    <td className="py-3 pr-4 font-mono text-xs">{payment.paymentReference}</td>
-                    <td className="py-3 pr-4 font-mono text-xs">{payment.bookingReference}</td>
+                    <td className="py-3 pr-4 font-mono text-xs">{payment.paymentReference || 'Not assigned'}</td>
+                    <td className="py-3 pr-4 font-mono text-xs">{payment.bookingReference || 'Unavailable'}</td>
                     <td className="py-3 pr-4">{payment.guestName || payment.customerEmail || 'Guest'}</td>
                     <td className="py-3 pr-4 capitalize">{payment.paymentType === 'full' ? 'Full payment' : 'Downpayment'}</td>
                     <td className="py-3 pr-4 uppercase">{payment.method}</td>
                     <td className="py-3 pr-4">${Number(payment.amount || 0).toLocaleString()}</td>
                     <td className="py-3">
                       <span className={`rounded-full border px-2 py-1 text-xs capitalize ${payment.status === 'paid' ? 'border-state-success/40 bg-state-success/10 text-state-success' : 'border-state-warning/40 bg-state-warning/10 text-state-warning'}`}>
-                        {payment.status}
+                        {payment.status === 'paid' ? 'Paid' : 'Unpaid'}
                       </span>
                     </td>
                   </tr>
@@ -1132,12 +1232,14 @@ export default function AdminDashboardPage({ view = 'dashboard' }) {
                           <h3 className="font-semibold text-text-primary dark:text-dark-text-primary">{selected.title}</h3>
                           <p className="mt-1 text-sm text-text-secondary dark:text-dark-text-secondary">{selected.message}</p>
                           <dl className="mt-3 space-y-2">
-                            {Object.entries(selected.details || {}).map(([key, value]) => (
+                            {Object.entries(selected.details || {})
+                              .filter(([key]) => !['bookingId', 'paymentId'].includes(key))
+                              .map(([key, value]) => (
                               <div key={key} className="grid grid-cols-[7rem_1fr] gap-2 text-sm">
-                                <dt className="capitalize text-text-muted dark:text-dark-text-muted">{key.replace(/([A-Z])/g, ' $1')}</dt>
-                                <dd className="break-words text-text-primary dark:text-dark-text-primary">{Array.isArray(value) || (value && typeof value === 'object') ? JSON.stringify(value) : String(value ?? '—')}</dd>
+                                <dt className="text-text-muted dark:text-dark-text-muted">{notificationDetailLabel(key)}</dt>
+                                <dd className="break-words text-text-primary dark:text-dark-text-primary"><NotificationDetailValue name={key} value={value} /></dd>
                               </div>
-                            ))}
+                              ))}
                           </dl>
                           {hasPermission('notifications.delete') && (
                             <button type="button" onClick={() => handleNotificationDelete(selected.id)} className="mt-4 rounded-full border border-state-error/40 bg-state-error/10 px-4 py-2 text-sm font-medium text-state-error hover:bg-state-error/20">

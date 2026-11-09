@@ -26,6 +26,13 @@ import {
   updateBooking as updateBookingRecord,
 } from '../services/supabaseRepository.js';
 import { bookingRoomIds } from '../services/bookingService.js';
+import {
+  createStoredStaffAccount,
+  findStoredStaffAccount,
+  isLiveStaffStorage,
+  listStoredStaffAccounts,
+  updateStoredStaffAccount,
+} from '../services/staffRepository.js';
 
 const calculateNightCount = (arrival, departure) => {
   const start = new Date(arrival);
@@ -124,9 +131,9 @@ export const getDashboardMetrics = async (req, res) => {
   });
 };
 
-export const adminLoginController = (req, res) => {
+export const adminLoginController = async (req, res) => {
   try {
-    const result = loginAdminUser(req.body || {});
+    const result = await loginAdminUser(req.body || {});
     res.status(200).json({
       message: 'Admin login successful.',
       token: result.token,
@@ -159,18 +166,19 @@ export const adminLogoutController = (req, res) => {
   return res.status(200).json({ message: 'Logged out successfully.' });
 };
 
-export const listStaffAccounts = (req, res) => {
-  const staff = mockUsers
+export const listStaffAccounts = async (req, res) => {
+  const storedStaff = await listStoredStaffAccounts();
+  const localStaff = mockUsers
     .filter((user) => user.isStaff || user.role !== 'customer')
     .map((user) => normalizeStaffUser(user));
 
   return res.status(200).json({
     message: 'Staff accounts retrieved successfully.',
-    staff,
+    staff: [...storedStaff.map(normalizeStaffUser), ...localStaff],
   });
 };
 
-export const createStaffAccount = (req, res) => {
+export const createStaffAccount = async (req, res) => {
   try {
     const { fullName, username, email, contactNumber, role, password = 'TempPass123!' } = req.body || {};
 
@@ -179,20 +187,25 @@ export const createStaffAccount = (req, res) => {
     }
 
     const normalizedEmail = String(email).trim().toLowerCase();
-    if (mockUsers.some((user) => user.email === normalizedEmail || user.username === username)) {
+    const normalizedUsername = String(username).trim().toLowerCase();
+    if (mockUsers.some((user) => user.email.toLowerCase() === normalizedEmail || user.username?.toLowerCase() === normalizedUsername)) {
       return res.status(409).json({ message: 'An account with this email or username already exists.' });
     }
 
-    const targetRole = mockRoles.find((entry) => entry.id === role || entry.name === role) || mockRoles[1];
+    const targetRole = mockRoles.find((entry) => entry.id === role || entry.name.toLowerCase() === String(role || '').trim().toLowerCase());
+    if (!targetRole) {
+      return res.status(400).json({ message: 'Select a valid staff role.' });
+    }
+
     const newUser = {
       id: crypto.randomUUID(),
       name: fullName.trim(),
-      username: String(username).trim(),
+      username: normalizedUsername,
       email: normalizedEmail,
       passwordHash: hashPassword(password),
       role: targetRole.id === 'super-admin' ? 'admin' : targetRole.id,
       roles: [targetRole.id],
-      permissions: targetRole.permissions,
+      permissions: [...targetRole.permissions],
       isStaff: true,
       isActive: true,
       createdAt: new Date().toISOString(),
@@ -200,79 +213,86 @@ export const createStaffAccount = (req, res) => {
       contactNumber: String(contactNumber || '+63 000 000 0000'),
     };
 
-    mockUsers.push(newUser);
+    const savedUser = await createStoredStaffAccount(newUser);
     recordAuditLog({
       actorId: req.user?.id,
       actorName: req.user?.name || 'System',
       action: 'staff.create',
       resource: 'staff',
-      metadata: { userId: newUser.id, email: newUser.email, role: targetRole.name },
+      metadata: { userId: savedUser.id, email: savedUser.email, role: targetRole.name },
     });
 
     return res.status(201).json({
       message: 'Staff account created successfully.',
-      staff: normalizeStaffUser(newUser),
+      staff: normalizeStaffUser(savedUser),
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message || 'Unable to create staff account.' });
+    return res.status(error.status || 500).json({ message: error.message || 'Unable to create staff account.' });
   }
 };
 
-export const updateStaffAccount = (req, res) => {
+export const updateStaffAccount = async (req, res) => {
   const { id } = req.params;
-  const user = mockUsers.find((entry) => entry.id === id);
+  const user = mockUsers.find((entry) => entry.id === id) || await findStoredStaffAccount(id);
 
   if (!user) {
     return res.status(404).json({ message: 'Staff account not found.' });
   }
 
   const { fullName, username, email, contactNumber, role } = req.body || {};
-  if (fullName) user.name = fullName;
-  if (username) user.username = username;
-  if (email) user.email = String(email).trim().toLowerCase();
-  if (contactNumber) user.contactNumber = contactNumber;
+  const patch = {};
+  if (fullName) patch.name = String(fullName).trim();
+  if (username) patch.username = String(username).trim().toLowerCase();
+  if (email) patch.email = String(email).trim().toLowerCase();
+  if (contactNumber !== undefined) patch.contactNumber = String(contactNumber);
 
   if (role) {
     const targetRole = mockRoles.find((entry) => entry.id === role || entry.name === role);
-    if (targetRole) {
-      user.role = targetRole.id === 'super-admin' ? 'admin' : targetRole.id;
-      user.roles = [targetRole.id];
-      user.permissions = [...targetRole.permissions];
-    }
+    if (!targetRole) return res.status(400).json({ message: 'Select a valid staff role.' });
+    patch.role = targetRole.id === 'super-admin' ? 'admin' : targetRole.id;
+    patch.roles = [targetRole.id];
+    patch.permissions = [...targetRole.permissions];
   }
+  const savedUser = await (isLiveStaffStorage() && !mockUsers.some((entry) => entry.id === id)
+    ? updateStoredStaffAccount(id, patch)
+    : Promise.resolve(Object.assign(user, patch)));
 
   recordAuditLog({
     actorId: req.user?.id,
     actorName: req.user?.name || 'System',
     action: 'staff.update',
     resource: 'staff',
-    metadata: { userId: user.id, updatedFields: Object.keys(req.body || {}) },
+    metadata: { userId: savedUser.id, updatedFields: Object.keys(req.body || {}) },
   });
 
-  return res.status(200).json({ message: 'Staff account updated successfully.', staff: normalizeStaffUser(user) });
+  return res.status(200).json({ message: 'Staff account updated successfully.', staff: normalizeStaffUser(savedUser) });
 };
 
-export const toggleStaffStatus = (req, res) => {
+export const toggleStaffStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body || {};
-  const user = mockUsers.find((entry) => entry.id === id);
+  const user = mockUsers.find((entry) => entry.id === id) || await findStoredStaffAccount(id);
 
   if (!user) {
     return res.status(404).json({ message: 'Staff account not found.' });
   }
 
   const nextStatus = status === 'inactive' ? 'inactive' : 'active';
-  user.isActive = nextStatus === 'active';
+  const isMockUser = mockUsers.some((entry) => entry.id === id);
+  const updatedUser = await (isLiveStaffStorage() && !isMockUser
+    ? updateStoredStaffAccount(id, { isActive: nextStatus === 'active' })
+    : Promise.resolve({ ...user, isActive: nextStatus === 'active' }));
+  if (isMockUser) user.isActive = updatedUser.isActive;
 
   recordAuditLog({
     actorId: req.user?.id,
     actorName: req.user?.name || 'System',
     action: 'staff.status.update',
     resource: 'staff',
-    metadata: { userId: user.id, status: nextStatus },
+    metadata: { userId: updatedUser.id, status: nextStatus },
   });
 
-  return res.status(200).json({ message: 'Staff status updated successfully.', staff: normalizeStaffUser(user) });
+  return res.status(200).json({ message: 'Staff status updated successfully.', staff: normalizeStaffUser(updatedUser) });
 };
 
 export const listRoles = (req, res) => {
@@ -477,6 +497,15 @@ export const deleteBookingController = async (req, res) => {
     return res.status(404).json({ message: 'Booking not found.' });
   }
 
+  const payments = await listPaymentRecords();
+  const hasSettledPayment = payments.some((payment) => (
+    payment.status === 'paid'
+    && (payment.bookingId === booking.id || (booking.bookingReference && payment.bookingReference === booking.bookingReference))
+  ));
+  if (hasSettledPayment || Number(booking.amountPaid || 0) > 0) {
+    return res.status(409).json({ message: 'A reservation with a settled payment cannot be deleted.' });
+  }
+
   await deleteBookingRecord(booking.id);
 
   recordAuditLog({
@@ -502,6 +531,19 @@ export const updateBookingStatus = async (req, res) => {
   const existing = await findBookingRecord(id);
   if (!existing) {
     return res.status(404).json({ message: 'Booking not found.' });
+  }
+
+  const payments = await listPaymentRecords();
+  const hasSettledPayment = payments.some((payment) => (
+    payment.status === 'paid'
+    && (payment.bookingId === existing.id || (existing.bookingReference && payment.bookingReference === existing.bookingReference))
+  ));
+  if (status === 'cancelled' && (hasSettledPayment || Number(existing.amountPaid || 0) > 0)) {
+    return res.status(409).json({ message: 'A reservation with a settled payment cannot be cancelled.' });
+  }
+
+  if (existing.status === 'approved' && status !== 'approved') {
+    return res.status(409).json({ message: 'A paid reservation cannot be moved back to another status.' });
   }
 
   const timestamp = new Date().toISOString();

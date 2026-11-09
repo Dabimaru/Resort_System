@@ -62,6 +62,12 @@ export const processReservationPayment = async ({
 
   const booking = await resolveBooking(bookingId);
 
+  if (!booking) {
+    const error = new Error('Reservation not found. Payments can only be created for an existing booking.');
+    error.status = 404;
+    throw error;
+  }
+
   if (booking?.status === 'cancelled') {
     const error = new Error('This reservation was cancelled and can no longer be paid.');
     error.status = 409;
@@ -74,34 +80,65 @@ export const processReservationPayment = async ({
     throw error;
   }
 
-  const computedAmount = booking ? calculatePaymentAmount(booking, paymentType) : 0;
+  if (booking.status !== 'processing') {
+    const error = new Error('The reservation must be approved by resort staff before payment.');
+    error.status = 409;
+    throw error;
+  }
+
+  const previousPayments = await getPaymentsForBooking(booking.id);
+  const paidPayment = previousPayments.find((entry) => entry.status === 'paid');
+  if (paidPayment) {
+    const error = new Error('A payment has already been completed for this reservation.');
+    error.status = 409;
+    throw error;
+  }
+
+  const pendingPayment = previousPayments.find((entry) => entry.status === 'pending');
+  if (pendingPayment) {
+    return pendingPayment;
+  }
+
+  const balanceDue = Math.max(0, Number(booking.totalAmount || 0) - Number(booking.amountPaid || 0));
+  const computedAmount = paymentType === 'full'
+    ? balanceDue
+    : Math.min(calculatePaymentAmount(booking, paymentType), balanceDue);
   const providedAmount = amount === undefined || amount === null || amount === '' ? null : Number(amount);
   const normalizedAmount = providedAmount ?? computedAmount;
 
-  if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
-    const error = new Error('Payment amount must be a positive number.');
+  if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0 || Math.round(normalizedAmount * 100) !== Math.round(computedAmount * 100)) {
+    const error = new Error('Payment amount does not match the selected payment type and remaining balance.');
     error.status = 400;
     throw error;
   }
 
   const paymentRecord = {
     id: crypto.randomUUID(),
-    bookingId: booking?.id || bookingId,
-    bookingReference: booking?.bookingReference || bookingId,
-    paymentReference: `PAY-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+    bookingId: booking.id,
+    bookingReference: booking.bookingReference,
+    paymentReference: null,
     amount: normalizedAmount,
-    totalAmount: booking?.totalAmount || null,
+    totalAmount: booking.totalAmount || null,
     paymentType,
     method,
-    customerEmail: customerEmail || booking?.guestEmail || '',
-    guestName: booking?.guestName || actorName,
+    customerEmail: customerEmail || booking.guestEmail || '',
+    guestName: booking.guestName || actorName,
     gateway: 'mock',
     status: 'pending',
     verificationCode: `${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
     createdAt: new Date().toISOString(),
   };
 
-  return createPayment(paymentRecord);
+  try {
+    return await createPayment(paymentRecord);
+  } catch (error) {
+    if (error.status === 409) {
+      const currentPayments = await getPaymentsForBooking(booking.id);
+      const currentPendingPayment = currentPayments.find((entry) => entry.status === 'pending');
+      if (currentPendingPayment) return currentPendingPayment;
+    }
+    throw error;
+  }
 };
 
 export const verifyReservationPayment = async ({ paymentId, verificationCode, actor = 'guest' }) => {
@@ -131,11 +168,40 @@ export const verifyReservationPayment = async ({ paymentId, verificationCode, ac
     throw error;
   }
 
+  const booking = await resolveBooking(payment.bookingId);
+  if (!booking) {
+    const error = new Error('Reservation not found. This payment cannot be settled.');
+    error.status = 404;
+    throw error;
+  }
+  if (booking.status === 'cancelled') {
+    const error = new Error('This reservation was cancelled and its payment cannot be settled.');
+    error.status = 409;
+    throw error;
+  }
+  if (booking.status !== 'processing') {
+    const error = new Error('The reservation is not awaiting payment.');
+    error.status = 409;
+    throw error;
+  }
+
   const timestamp = new Date().toISOString();
-  const settled = await markPaymentPaid(payment.id, timestamp);
+  const paymentReference = payment.paymentReference || `PAY-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+  const settled = await markPaymentPaid(payment.id, timestamp, paymentReference);
+
+  if (!settled) {
+    const currentPayment = (await listPayments()).find((entry) => entry.id === payment.id);
+    if (currentPayment?.status === 'paid') {
+      return currentPayment;
+    }
+
+    const error = new Error('This payment could not be settled because its status changed. Refresh and try again.');
+    error.status = 409;
+    throw error;
+  }
 
   // Settling the payment is what moves a reservation from Processing to Approved.
-  const booking = await resolveBooking(payment.bookingId);
+  let updatedBooking = booking;
 
   if (booking && booking.status !== 'cancelled') {
     const amountPaid = Math.round(((Number(booking.amountPaid) || 0) + Number(payment.amount)) * 100) / 100;
@@ -148,7 +214,7 @@ export const verifyReservationPayment = async ({ paymentId, verificationCode, ac
       paidAt: timestamp,
     };
 
-    const updatedBooking = await updateBooking(booking.id, {
+    updatedBooking = await updateBooking(booking.id, {
       status: 'approved',
       paymentStatus: payment.paymentType === 'full' ? 'paid' : 'partial',
       paymentType: payment.paymentType,
@@ -176,6 +242,6 @@ export const verifyReservationPayment = async ({ paymentId, verificationCode, ac
 
   }
 
-  await createPaymentNotification({ payment: settled || payment, booking, actor });
-  return settled || payment;
+  await createPaymentNotification({ payment: settled, booking: updatedBooking, actor });
+  return settled;
 };
