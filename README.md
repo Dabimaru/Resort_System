@@ -86,6 +86,12 @@ Key variables include:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `VITE_API_URL`
 
+## Vercel deployment
+- Link the GitHub repository to Vercel and set the intended production branch (usually `main`). Vercel automatically builds and deploys new commits pushed or merged to that branch; application code should not automatically merge changes.
+- Add `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to the Vercel server environment for every environment that should use live Supabase. Keep the service-role key server-only; do not use a `VITE_` prefix.
+- Apply `supabase/schema.sql` before deploying the live-auth change so the `auth_sessions` table exists. The schema helper needs `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF`, or the configured service-role credentials.
+- Live sessions are stored in Supabase and remain valid across separate Vercel serverless invocations; each session expires after seven days.
+
 ## Notes
 - Live Supabase schema creation requires the project service-role key.
 - Until the real schema is applied, the app uses a local fallback layer for development and testing stability.

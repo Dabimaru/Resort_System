@@ -13,10 +13,9 @@ import {
   ensureDefaultAdmin,
   calendarAvailability,
   setDateAvailability,
-  authTokens,
 } from '../data/mockStore.js';
 import { createReservationNotification } from '../services/notificationService.js';
-import { loginAdminUser, getUserByToken } from '../services/authService.js';
+import { loginAdminUser, logoutUser } from '../services/authService.js';
 import {
   deleteBooking as deleteBookingRecord,
   findBooking as findBookingRecord,
@@ -145,25 +144,18 @@ export const adminLoginController = async (req, res) => {
 };
 
 export const adminMeController = async (req, res) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  const user = await getUserByToken(token);
-
-  if (!user) {
-    return res.status(401).json({ message: 'Unauthorized.' });
-  }
-
-  return res.status(200).json({ user });
+  return res.status(200).json({ user: req.user });
 };
 
-export const adminLogoutController = (req, res) => {
+export const adminLogoutController = async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
 
-  // Drop the bearer token so a captured value cannot be replayed after logout.
-  if (token) {
-    authTokens.delete(token);
+  try {
+    await logoutUser(token);
+    return res.status(200).json({ message: 'Logged out successfully.' });
+  } catch (error) {
+    return res.status(error.status || 500).json({ message: error.message || 'Unable to log out.' });
   }
-
-  return res.status(200).json({ message: 'Logged out successfully.' });
 };
 
 export const listStaffAccounts = async (req, res) => {

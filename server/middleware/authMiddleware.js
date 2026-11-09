@@ -9,13 +9,17 @@ export const requireAuth = async (req, res, next) => {
     return res.status(401).json({ message: 'Authentication token is required.' });
   }
 
-  const user = await getUserByToken(token);
-  if (!user) {
-    return res.status(401).json({ message: 'Invalid or expired token.' });
-  }
+  try {
+    const user = await getUserByToken(token);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid or expired token.' });
+    }
 
-  req.user = user;
-  return next();
+    req.user = user;
+    return next();
+  } catch (error) {
+    return next(error);
+  }
 };
 
 // Attaches req.user when a valid token is present but never blocks the request.
@@ -35,7 +39,7 @@ export const optionalAuth = async (req, res, next) => {
       req.user = user;
     }
   } catch (error) {
-    // A stale token should not fail a public endpoint.
+    return next(error);
   }
 
   return next();

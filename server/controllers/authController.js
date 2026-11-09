@@ -1,4 +1,4 @@
-import { loginUser, registerUser, getUserByToken } from '../services/authService.js';
+import { loginUser, registerUser } from '../services/authService.js';
 
 export const registerController = async (req, res) => {
   try {
@@ -26,11 +26,5 @@ export const loginController = async (req, res) => {
 };
 
 export const meController = async (req, res) => {
-  const user = await getUserByToken(req.headers.authorization?.replace('Bearer ', ''));
-
-  if (!user) {
-    return res.status(401).json({ message: 'Unauthorized.' });
-  }
-
-  return res.status(200).json({ user });
+  return res.status(200).json({ user: req.user });
 };

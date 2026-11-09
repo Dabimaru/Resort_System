@@ -13,6 +13,21 @@ import {
   findStoredStaffAccountByIdentifier,
   isLiveStaffStorage,
 } from './staffRepository.js';
+import {
+  createPersistentSession,
+  findPersistentSession,
+  revokePersistentSession,
+} from './sessionRepository.js';
+
+const issueSession = async (user, accountType) => {
+  const token = createToken();
+  if (supabaseStatus.liveMode) {
+    await createPersistentSession({ token, accountId: user.id, accountType });
+  } else {
+    authTokens.set(token, user.id);
+  }
+  return token;
+};
 
 const getPasswordAliases = (user) => {
   const aliases = new Set();
@@ -195,8 +210,13 @@ export const loginUser = async ({ email, username, password }) => {
 
     const row = data && data.length > 0 ? data[0] : null;
     if (row && row.password_hash === hashPassword(password)) {
-      const token = createToken();
-      authTokens.set(token, row.id);
+      if (row.is_active === false) {
+        const error = new Error('This account is inactive. Please contact the administrator.');
+        error.status = 403;
+        throw error;
+      }
+
+      const token = await issueSession({ id: row.id }, 'customer');
 
       return {
         token,
@@ -236,8 +256,7 @@ export const loginUser = async ({ email, username, password }) => {
     throw error;
   }
 
-  const token = createToken();
-  authTokens.set(token, user.id);
+  const token = await issueSession(user, 'mock');
   user.lastLoginAt = new Date().toISOString();
 
   return {
@@ -265,8 +284,7 @@ export const loginAdminUser = async ({ username, email, password }) => {
         throw error;
       }
 
-      const token = createToken();
-      authTokens.set(token, storedUser.id);
+      const token = await issueSession(storedUser, 'staff');
       return {
         token,
         user: sanitizeUser(storedUser),
@@ -294,8 +312,7 @@ export const loginAdminUser = async ({ username, email, password }) => {
     throw error;
   }
 
-  const token = createToken();
-  authTokens.set(token, user.id);
+  const token = await issueSession(user, 'mock');
   user.lastLoginAt = new Date().toISOString();
 
   return {
@@ -306,6 +323,52 @@ export const loginAdminUser = async ({ username, email, password }) => {
 
 export const getUserByToken = async (token) => {
   if (!token) {
+    return null;
+  }
+
+  if (supabaseStatus.liveMode) {
+    const session = await findPersistentSession(token);
+    if (!session) return null;
+
+    if (session.account_type === 'mock') {
+      const mockUser = mockUsers.find((entry) => entry.id === session.account_id);
+      if (!mockUser || mockUser.isActive === false) return null;
+      return sanitizeUser(mockUser);
+    }
+
+    if (session.account_type === 'staff') {
+      const staffUser = await findStoredStaffAccount(session.account_id);
+      if (!staffUser || !staffUser.isActive) return null;
+      return sanitizeUser(staffUser);
+    }
+
+    if (session.account_type === 'customer') {
+      const { data, error } = await supabaseAdmin
+        .from('customer_accounts')
+        .select('*')
+        .eq('id', session.account_id)
+        .maybeSingle();
+      if (error) {
+        const wrapped = new Error(`Unable to validate the customer account: ${error.message}`);
+        wrapped.status = 503;
+        throw wrapped;
+      }
+      if (!data || data.is_active === false) return null;
+      return sanitizeUser({
+        id: data.id,
+        name: data.name,
+        username: data.username || null,
+        email: data.email,
+        role: data.role || 'customer',
+        roles: data.roles || [data.role || 'customer'],
+        permissions: data.permissions || ['customer.read'],
+        isStaff: Boolean(data.is_staff || data.isStaff || false),
+        isActive: data.is_active !== false,
+        createdAt: data.created_at,
+        lastLoginAt: data.last_login_at || null,
+      });
+    }
+
     return null;
   }
 
@@ -321,42 +384,16 @@ export const getUserByToken = async (token) => {
 
   if (isLiveStaffStorage()) {
     const storedStaff = await findStoredStaffAccount(userId);
-    if (storedStaff) {
-      if (!storedStaff.isActive) return null;
-      return sanitizeUser(storedStaff);
-    }
+    if (storedStaff?.isActive) return sanitizeUser(storedStaff);
   }
 
-  if (!supabaseStatus.liveMode) {
-    return null;
+  return null;
+};
+
+export const logoutUser = async (token) => {
+  if (!token) return;
+  if (supabaseStatus.liveMode) {
+    await revokePersistentSession(token);
   }
-
-  try {
-    const { data, error } = await supabaseAdmin
-      .from('customer_accounts')
-      .select('*')
-      .eq('id', userId)
-      .limit(1);
-
-    const row = data && data.length > 0 ? data[0] : null;
-    if (!row || error) {
-      return null;
-    }
-
-    return sanitizeUser({
-      id: row.id,
-      name: row.name,
-      username: row.username || null,
-      email: row.email,
-      role: row.role || 'customer',
-      roles: row.roles || [(row.role || 'customer')],
-      permissions: row.permissions || ['customer.read'],
-      isStaff: Boolean(row.is_staff || row.isStaff || false),
-      isActive: row.is_active !== false,
-      createdAt: row.created_at,
-      lastLoginAt: row.last_login_at || null,
-    });
-  } catch (error) {
-    return null;
-  }
+  authTokens.delete(token);
 };
