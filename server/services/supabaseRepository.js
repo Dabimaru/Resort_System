@@ -244,6 +244,12 @@ export const listPayments = async () => {
 
 export const createPayment = async (payment) => {
   if (!live()) {
+    const existing = mockPayments.find((entry) => entry.bookingId === payment.bookingId);
+    if (existing) {
+      const error = new Error('A payment record already exists for this reservation.');
+      error.status = 409;
+      throw error;
+    }
     mockPayments.push(payment);
     return payment;
   }
@@ -267,28 +273,35 @@ export const createPayment = async (payment) => {
     .select();
 
   if (error) {
-    throw fail('Unable to record the payment', error);
+    const wrapped = fail('Unable to record the payment', error);
+    if (error.code === '23505') {
+      wrapped.status = 409;
+      wrapped.message = 'A payment record already exists for this reservation.';
+    }
+    throw wrapped;
   }
 
   return mapPaymentRow(data[0]);
 };
 
-export const markPaymentPaid = async (id, paidAt) => {
+export const markPaymentPaid = async (id, paidAt, paymentReference) => {
   if (!live()) {
     const payment = mockPayments.find((entry) => entry.id === id || entry.paymentReference === id);
-    if (!payment) {
+    if (!payment || payment.status === 'paid') {
       return null;
     }
 
     payment.status = 'paid';
     payment.paidAt = paidAt;
+    payment.paymentReference = paymentReference;
     return payment;
   }
 
   const { data, error } = await supabaseAdmin
     .from('payments')
-    .update({ status: 'paid', paid_at: paidAt })
+    .update({ status: 'paid', paid_at: paidAt, payment_reference: paymentReference })
     .eq('id', id)
+    .eq('status', 'pending')
     .select();
 
   if (error) {

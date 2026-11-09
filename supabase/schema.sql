@@ -22,6 +22,26 @@ create table if not exists customer_accounts (
   last_login_at timestamptz
 );
 
+create table if not exists staff_accounts (
+  id uuid primary key default uuid_generate_v4(),
+  full_name text not null,
+  username text not null,
+  email text not null,
+  contact_number text,
+  password_hash text not null,
+  role_key text not null,
+  roles jsonb not null default '[]'::jsonb,
+  permissions jsonb not null default '[]'::jsonb,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  last_login_at timestamptz
+);
+
+alter table staff_accounts enable row level security;
+create unique index if not exists idx_staff_accounts_email_unique on staff_accounts(lower(email));
+create unique index if not exists idx_staff_accounts_username_unique on staff_accounts(lower(username));
+
 create table if not exists bookings (
   id uuid primary key default uuid_generate_v4(),
   property_id uuid references properties(id) on delete cascade,
@@ -268,7 +288,7 @@ create table if not exists payments (
   id uuid primary key default uuid_generate_v4(),
   booking_id uuid,
   booking_reference text,
-  payment_reference text not null unique,
+  payment_reference text unique,
   amount numeric(12,2) not null default 0,
   payment_type text not null default 'downpayment',
   method text not null default 'cash',
@@ -282,6 +302,10 @@ create table if not exists payments (
 
 create index if not exists idx_payments_booking on payments(booking_id);
 create index if not exists idx_payments_status on payments(status);
+alter table payments alter column payment_reference drop not null;
+create unique index if not exists idx_payments_single_per_booking
+  on payments(booking_id)
+  where booking_id is not null;
 
 alter table payments enable row level security;
 do $$

@@ -159,7 +159,6 @@ export const createReservationNotification = ({ booking, status, actor = 'system
       ? `${booking.guestName || 'A guest'} requested ${booking.suite || 'a room'} from ${booking.arrival} to ${booking.departure}.`
       : `Reservation ${booking.bookingReference} was ${status} by ${actor}.`,
     details: {
-      bookingId: booking.id,
       bookingReference: booking.bookingReference,
       guestName: booking.guestName || 'Guest',
       guestEmail: booking.guestEmail || '',
@@ -222,7 +221,6 @@ export const createPaymentNotification = ({ payment, booking, actor = 'guest' })
     title: 'Guest payment received',
     message: `${payment.guestName || booking?.guestName || 'A guest'} paid ${payment.amount} via ${payment.method}.`,
     details: {
-      paymentId: payment.id,
       paymentReference: payment.paymentReference,
       amount: payment.amount,
       paymentType: payment.paymentType,
@@ -231,7 +229,6 @@ export const createPaymentNotification = ({ payment, booking, actor = 'guest' })
       paidAt: payment.paidAt,
       guestName: payment.guestName || booking?.guestName || '',
       customerEmail: payment.customerEmail || booking?.guestEmail || '',
-      bookingId: booking?.id || payment.bookingId,
       bookingReference: booking?.bookingReference || payment.bookingReference,
       arrival: booking?.arrival || '',
       departure: booking?.departure || '',

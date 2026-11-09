@@ -73,6 +73,22 @@ test('role permissions can be updated and staff can be created', async () => {
     assert.equal(staffResponse.status, 201);
     assert.equal(staffData.staff.username, 'alicia');
 
+    const staffLoginResponse = await fetch(`http://127.0.0.1:${address.port}/api/admin/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'alicia', password: 'TempPass123!' }),
+    });
+    const staffLoginData = await staffLoginResponse.json();
+    assert.equal(staffLoginResponse.status, 200, staffLoginData.message);
+    assert.equal(staffLoginData.user.isStaff, true);
+    assert.equal(staffLoginData.user.roles[0], 'receptionist');
+
+    const listedStaffResponse = await fetch(`http://127.0.0.1:${address.port}/api/admin/staff`, {
+      headers: { Authorization: `Bearer ${loginData.token}` },
+    });
+    const listedStaffData = await listedStaffResponse.json();
+    assert.ok(listedStaffData.staff.some((entry) => entry.id === staffData.staff.id));
+
     const rolesResponse = await fetch(`http://127.0.0.1:${address.port}/api/admin/roles`, {
       headers: {
         'Content-Type': 'application/json',

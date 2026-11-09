@@ -8,6 +8,11 @@ import {
   hashPassword,
   mockUsers,
 } from '../data/mockStore.js';
+import {
+  findStoredStaffAccount,
+  findStoredStaffAccountByIdentifier,
+  isLiveStaffStorage,
+} from './staffRepository.js';
 
 const getPasswordAliases = (user) => {
   const aliases = new Set();
@@ -241,7 +246,7 @@ export const loginUser = async ({ email, username, password }) => {
   };
 };
 
-export const loginAdminUser = ({ username, email, password }) => {
+export const loginAdminUser = async ({ username, email, password }) => {
   ensureDefaultAdmin();
 
   if ((!username && !email) || !password) {
@@ -251,6 +256,24 @@ export const loginAdminUser = ({ username, email, password }) => {
   }
 
   const identifier = String(username || email || '').trim().toLowerCase();
+  if (isLiveStaffStorage()) {
+    const storedUser = await findStoredStaffAccountByIdentifier(identifier);
+    if (storedUser && passwordMatches(storedUser, password)) {
+      if (!storedUser.isActive) {
+        const error = new Error('This administrator account is inactive.');
+        error.status = 403;
+        throw error;
+      }
+
+      const token = createToken();
+      authTokens.set(token, storedUser.id);
+      return {
+        token,
+        user: sanitizeUser(storedUser),
+      };
+    }
+  }
+
   const matches = mockUsers.filter((entry) => {
     const matchesUsername = entry.username && entry.username.toLowerCase() === identifier;
     const matchesEmail = entry.email && entry.email.toLowerCase() === identifier;
@@ -294,6 +317,14 @@ export const getUserByToken = async (token) => {
   const localUser = mockUsers.find((entry) => entry.id === userId);
   if (localUser) {
     return sanitizeUser(localUser);
+  }
+
+  if (isLiveStaffStorage()) {
+    const storedStaff = await findStoredStaffAccount(userId);
+    if (storedStaff) {
+      if (!storedStaff.isActive) return null;
+      return sanitizeUser(storedStaff);
+    }
   }
 
   if (!supabaseStatus.liveMode) {

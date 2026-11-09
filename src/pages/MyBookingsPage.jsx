@@ -288,7 +288,7 @@ export default function MyBookingsPage() {
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div>
                         <p className="font-mono text-body-sm text-text-muted dark:text-dark-text-muted">
-                          {booking.bookingReference || booking.id}
+                          Booking ID Reference: {booking.bookingReference || 'Unavailable'}
                         </p>
                         <h3 className="mt-1 text-heading-md">
                           {(booking.rooms || []).map((room) => room.name).join(' + ') || booking.suite}
@@ -317,7 +317,7 @@ export default function MyBookingsPage() {
 
                     {booking.paymentReference ? (
                       <p className="mt-1 text-body-sm text-text-secondary dark:text-dark-text-secondary">
-                        Payment reference <span className="font-mono text-text-primary dark:text-dark-text-primary">{booking.paymentReference}</span>
+                        Payment Reference Number <span className="font-mono text-text-primary dark:text-dark-text-primary">{booking.paymentReference}</span>
                       </p>
                     ) : null}
 

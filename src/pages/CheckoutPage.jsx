@@ -162,7 +162,7 @@ export default function CheckoutPage() {
       setPayment(settled.payment);
       setStatus({
         type: 'success',
-        message: `Payment successful. Reference: ${settled.payment.paymentReference}`,
+        message: `Payment successful. Payment Reference Number: ${settled.payment.paymentReference}`,
       });
 
       const refreshed = await getUserBookings(token).catch(() => null);
@@ -206,7 +206,7 @@ export default function CheckoutPage() {
             <div className="mt-8 space-y-2 card-surface p-4 border-l-4 border-state-success bg-state-success/5 dark:bg-state-success/10">
               <h3 className="font-semibold text-state-success">Booking summary</h3>
               <p className="text-body-sm">
-                Reference <span className="font-mono text-text-primary dark:text-dark-text-primary">{booking.bookingReference || booking.id}</span>
+                Booking ID Reference <span className="font-mono text-text-primary dark:text-dark-text-primary">{booking.bookingReference || 'Unavailable'}</span>
               </p>
               <p className="text-body-sm">
                 {(booking.rooms || []).map((room) => room.name).join(' + ') || booking.suite}
@@ -227,7 +227,7 @@ export default function CheckoutPage() {
 
           {payment ? (
             <div className="mt-6 space-y-2 card-surface p-4 border-l-4 border-state-info">
-              <h3 className="font-semibold text-state-info">Payment reference</h3>
+              <h3 className="font-semibold text-state-info">Payment Reference Number</h3>
               <p className="font-mono text-body-md text-text-primary dark:text-dark-text-primary">{payment.paymentReference}</p>
               <p className="text-body-sm text-text-secondary dark:text-dark-text-secondary">
                 {payment.paymentType === 'full' ? 'Full payment' : 'Downpayment'} · {currency(payment.amount)} · {payment.method}
